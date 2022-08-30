@@ -1,10 +1,8 @@
 import {connect} from 'react-redux'
 import axios from 'axios'
-/**
- * COMPONENT
- */
 import React, { Component } from 'react'
-
+import Header from './Header'
+import HeroSection from './HeroSection'
 
 class Home extends Component {
   constructor(){
@@ -54,7 +52,9 @@ class Home extends Component {
     console.log('jobs', jobs)
     return (
       <div>
-        <h3>Welcome, {username ? username : 'loadgin'}</h3>
+        <Header />
+        <HeroSection />
+        {/* <h3>Welcome, {username ? username : 'loadgin'}</h3> */}
         <table class="table">
           <thead class="thead-dark">
             <tr>

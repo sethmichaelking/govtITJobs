@@ -5,25 +5,47 @@ import {logout} from '../store'
 
 const Navbar = ({handleClick, isLoggedIn}) => (
   <div>
-    <h1>FS-App-Template</h1>
-    <nav>
-      {isLoggedIn ? (
-        <div>
-          {/* The navbar will show these links after you log in */}
-          <Link to="/home">Home</Link>
-          <a href="#" onClick={handleClick}>
-            Logout
-          </a>
+     <nav class="navbar navbar-expand-lg navbar-light" style={{
+        backgroundColor: '#fff !important'
+     }}>
+        <a class="navbar-brand" href="#" style={{
+                      fontSize: '25px'
+                    }}>Navbar</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#" style={{
+                      fontSize: '25px'
+                    }}>Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" style={{
+                      fontSize: '25px'
+                    }}>Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" style={{
+                      fontSize: '25px'
+                    }}>Pricing</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" style={{
+                      fontSize: '25px'
+                    }}>Login</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#" style={{
+                      fontSize: '25px'
+                    }}>Register</a>
+                </li>
+            </ul>
         </div>
-      ) : (
-        <div>
-          {/* The navbar will show these links before you log in */}
-          <Link to="/login">Login</Link>
-          <Link to="/signup">Sign Up</Link>
-        </div>
-      )}
-    </nav>
-    <hr />
+      </nav>
   </div>
 )
 
