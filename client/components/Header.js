@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
 import Navbar from './Navbar'
+import Typewriter from 'typewriter-effect';
+
 export default class Header extends Component {
   
   render() {
@@ -44,6 +46,16 @@ export default class Header extends Component {
                         }}> 
                             The federal government offers <strong> unique hiring paths </strong> to help hire individuals that <strong>represent our diverse society.</strong> Learn more about each hiring path and your eligibility.
                         </p>
+                        {/* fit the typewriter inside the input */}
+                        {/* <input type="text" id="example" /> */}
+                        {/* <Typewriter
+                                options={{
+                                    strings: ['Hello', 'World'],
+                                    autoStart: true,
+                                    loop: true,
+                                  }}
+                            /> */}
+                            
                     </div>
                 </div>
             </div>
