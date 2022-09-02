@@ -4,7 +4,8 @@ import React, { Component } from 'react'
 import Header from './Header'
 import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
-
+import SearchFilter from './SearchFilter'
+import { RotatingLines } from 'react-loader-spinner'
 class Home extends Component {
   constructor(){
     super()
@@ -13,15 +14,20 @@ class Home extends Component {
         offset: 0,
         perPage: 25,
         currentPage: 0,
-        loading: false
+        loading: false,
+        search: '',
+        filteredSearchJobs: 0
       }
       this.getData = this.getData.bind(this)
       this.displayImage = this.displayImage.bind(this)
       this.handlePageClick = this.handlePageClick.bind(this)
-
+      this.onChange = this.onChange.bind(this)
   }
-
-
+  
+  onChange(e){
+    this.setState({search: e.target.value })
+    this.getData(this.state.search)
+  }
   displayImage(name){
     if (name === 'Department of the Treasury'){
       return 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Seal_of_the_United_States_Department_of_the_Treasury.svg/2048px-Seal_of_the_United_States_Department_of_the_Treasury.svg.png'
@@ -73,8 +79,8 @@ class Home extends Component {
     }
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png'
   }
-              
-  async getData() {
+    
+   getData = async() => {
     let container = []
     var host = 'data.usajobs.gov'; 
     var userAgent = 'sethkingriter@gmail.com'
@@ -93,11 +99,64 @@ class Home extends Component {
       .then(response => response.json())
       .then(data => {
         const gigs = data.SearchResult.SearchResultItems
-        console.log('gigs', gigs)
+        // console.log('gigs', gigs)
         container.push(...gigs)
       });
     }
-    const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
+    
+    //if there is nothing in the input, 
+      //if the filter length is 0, line 101,  container.slice(this.state.offset, this.
+      //else 
+        //container.filter().slice()
+    if (this.state.search.length === 0 ){
+      const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
+      console.log('container', container.filter(job => job.MatchedObjectDescriptor))
+      this.setState({ filteredSearchJobs: container.length})
+      const postData = slice.map((job) => {
+        return (
+          <article class="job-card" style={{
+            width: '100%',
+            marginBottom: '20px',
+          }}>
+              <div class="company-logo-img">
+                <img 
+                    src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                    style={{
+                    verticalAlign: 'middle',
+                    width: '116px',
+                    height: '116px',
+                    borderRadius: '50%',
+                    }} />  
+              </div>
+              <div class="job-title" style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'pre'
+              }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+              <div class="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+              <div class="skills-container">
+                <div class="skill">Photoshop</div>
+                <div class="skill">Illustrator</div>
+                <div class="skill">HTML</div>
+              </div>
+              <button class="apply">Apply</button>
+              <button class="save">Save Job</button>
+              <a href="#"></a>
+          </article>
+        )
+      })
+  
+      this.setState({
+        pageCount: Math.ceil(container.length / this.state.perPage),      
+        postData
+       })
+       this.setState({ loading: false })
+    } 
+
+
+
+    const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).slice(this.state.offset, this.state.offset + this.state.perPage)
+    this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
     const postData = slice.map((job) => {
       return (
         <article class="job-card" style={{
@@ -133,10 +192,11 @@ class Home extends Component {
     })
 
     this.setState({
-      pageCount: Math.ceil(container.length / this.state.perPage),      
+      pageCount: Math.ceil(container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length / this.state.perPage),      
       postData
      })
      this.setState({ loading: false })
+  
   }
 
   handlePageClick = (e) => {
@@ -164,14 +224,10 @@ class Home extends Component {
 
 
   render() {
-    const pageNumber = this.props.match.params.id * 1;
-    const { books, auth, cart, categories } = this.props;
-    const { option } = this.state;
-    const { setCurrentPage, onChange } = this;
-    
-    const { username } = this.props
-    const { jobs, totalPages, softwareGigs } = this.state
-    const { displayImage } = this
+    const current = new Date();
+    const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
+    const {  onChange } = this;
+
     return (
       <div>
         <Header />
@@ -214,14 +270,178 @@ class Home extends Component {
                                       color: '#203d7c',
                                       textTransform: 'uppercase'
                                     }}> Filters</p>
-                                    <input type="text" class="icon" placeholder="Search"/>
+                                    <input 
+                                      style={{
+                                        appearance: 'none',
+                                        padding: '0.3rem 1.7rem',
+                                        width: '100%',
+                                        position: 'relative',
+                                        backgroundColor: '#fff',
+                                        border: '1px solid #e4e8ec',
+                                        borderRadius: '5px'
+                                      }}
+                                      type="text" 
+                                      class="icon" 
+                                      placeholder="Search" 
+                                      onChange={onChange}
+                                    />
+                                </li>
+                                <li style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  marginLeft: '-1.8em',
+                                  marginTop: '20px'
+                                }}>
+                                    <p style={{
+                                      fontWeight: '700',
+                                      fontSize: '18px',
+                                      lineHeight: '22px',
+                                      alignItems: 'center',
+                                      letterSpacing: '.6px',
+                                      color: '#203d7c',
+                                      textTransform: 'uppercase'
+                                    }}> Location</p>
+                                    <div>
+                                      <ul style={{
+                                        display: 'flex',
+                                        width: '100%',
+                                        flexWrap: 'wrap',
+                                        marginLeft: '-14%'
+                                      }}>
+                                        <li style={{
+                                          display: 'flex',
+                                          background: '#fff',
+                                          border: '1px solid #E5E8ED',
+                                          boxSizing: 'border-box',
+                                          height: '30px',
+                                          fontWeight: '600',
+                                          fontSize: '12px',
+                                          lineHeight: '17px',
+                                          color: '#031b4e',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          maxWidth: 'calc(50% - 0.25rem)',
+                                          width: 'calc(50% - 0.25rem)',
+                                          cursor: 'pointer',
+                                          borderRadius: '4px',
+                                          userSelect: 'none',
+                                          mozUserSelect: 'none',
+                                          webkitUserSelect: 'none',
+                                          webkitTouchCallout: 'none',
+                                          
+                                        }}>
+                                            <a style={{
+                                              display: 'flex',
+                                              height: '100%',
+                                              width: '100%',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              color: '#031b4e'
+                                            }}>
+                                              <div>
+                                                Boston, Ma
+                                              </div>
+                                              <span> 838</span>
+                                            </a>
+                                        </li>
+                                        <li style={{
+                                          display: 'flex',
+                                          background: '#fff',
+                                          border: '1px solid #E5E8ED',
+                                          boxSizing: 'border-box',
+                                          height: '30px',
+                                          fontWeight: '600',
+                                          fontSize: '12px',
+                                          lineHeight: '17px',
+                                          color: '#031b4e',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          maxWidth: 'calc(50% - 0.25rem)',
+                                          width: 'calc(50% - 0.25rem)',
+                                          cursor: 'pointer',
+                                          borderRadius: '4px'
+                                        }}>
+                                            <a style={{
+                                              display: 'flex',
+                                              height: '100%',
+                                              width: '100%',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              color: '#031b4e'
+                                            }}>
+                                              <div>
+                                                Boston, Ma
+                                              </div>
+                                              <span> 838</span>
+                                            </a>
+                                        </li>
+                                        <li style={{
+                                          display: 'flex',
+                                          background: '#fff',
+                                          border: '1px solid #E5E8ED',
+                                          boxSizing: 'border-box',
+                                          height: '30px',
+                                          fontWeight: '600',
+                                          fontSize: '12px',
+                                          lineHeight: '17px',
+                                          color: '#031b4e',
+                                          alignItems: 'center',
+                                          justifyContent: 'center',
+                                          maxWidth: 'calc(50% - 0.25rem)',
+                                          width: 'calc(50% - 0.25rem)',
+                                          cursor: 'pointer',
+                                          borderRadius: '4px',
+                                        }}>
+                                            <a style={{
+                                              display: 'flex',
+                                              height: '100%',
+                                              width: '100%',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              color: '#031b4e',
+                                              
+                                            }}>
+                                              <div>
+                                                Boston, Ma
+                                              </div>
+                                              <span> 838</span>
+                                            </a>
+                                        </li>
+                                      </ul>
+                                    </div>
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                    {/* the jobs */}
+                    </div>                    
+                     {/* the jobs */}
                     <div class="col-8">
-                      {this.state.loading ? 'loading' : this.state.postData}
+                      <div style={{
+                          marginLeft: 'auto',
+                          marginRight: 'auto',
+                          marginBottom: '1rem',
+                          color: '#264384',
+                          fontSize: '20px'
+                      }}> 
+                        {this.state.filteredSearchJobs} open jobs・Updated  {date}
+                      </div>
+                      {this.state.loading ? 
+                      <div style={{
+                        margin: '50px auto',
+                        display: 'flex',
+                        listStyle: 'none',
+                        outline: 'none',
+                        justifyContent: 'center'
+                      }}>
+                        <RotatingLines
+                        strokeColor="black"
+                        strokeWidth="5"
+                        animationDuration="0.75"
+                        width="150"
+                        visible={true}
+                      /> 
+                    </div>
+                    : this.state.postData}
                       <ReactPaginate
                             previousLabel={"prev"}
                             nextLabel={"next"}
