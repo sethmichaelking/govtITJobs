@@ -6,6 +6,7 @@ import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
 import SearchFilter from './SearchFilter'
 import { RotatingLines } from 'react-loader-spinner'
+
 class Home extends Component {
   constructor(){
     super()
@@ -16,14 +17,42 @@ class Home extends Component {
         currentPage: 0,
         loading: false,
         search: '',
-        filteredSearchJobs: 0
+        filteredSearchJobs: 0,
+        topCities: '',
+        citySelected: '',
+        selections: []
       }
       this.getData = this.getData.bind(this)
       this.displayImage = this.displayImage.bind(this)
       this.handlePageClick = this.handlePageClick.bind(this)
       this.onChange = this.onChange.bind(this)
+      this.showCityJobs = this.showCityJobs.bind(this)
   }
-  
+  handlePageClick = (e) => {
+    const selectedPage = e.selected;
+    const offset = selectedPage * this.state.perPage;
+
+    this.setState({
+        currentPage: selectedPage,
+        offset: offset
+    }, () => {
+        this.getData()
+    });
+
+};
+
+  showCityJobs(city){
+    if (this.state.citySelected !== city){
+    this.setState({ citySelected: city })
+    const selections = [...this.state.selections]
+    selections.push(city)
+    this.setState({ selections: selections });
+    this.getData(this.state.citySelected)
+    } else {
+      this.setState({ citySelected: '' })
+      this.getData()
+    }
+  }
   onChange(e){
     this.setState({search: e.target.value })
     this.getData(this.state.search)
@@ -86,7 +115,7 @@ class Home extends Component {
     var userAgent = 'sethkingriter@gmail.com'
     var authKey = 'InzNEWOLXdrBHP/62f3tqX6pOhSGmFDaTdHOB9zEmbg=' 
     this.setState({ loading: true })
-    for (let i = 1; i < 3; i++){
+    for (let i = 1; i < 5; i++){
       const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
         method: 'GET',      
         headers: {          
@@ -99,26 +128,88 @@ class Home extends Component {
       .then(response => response.json())
       .then(data => {
         const gigs = data.SearchResult.SearchResultItems
-        // console.log('gigs', gigs)
         container.push(...gigs)
       });
     }
     
-    //if there is nothing in the input, 
-      //if the filter length is 0, line 101,  container.slice(this.state.offset, this.
-      //else 
-        //container.filter().slice()
     if (this.state.search.length === 0 ){
+      //if a city was selected
+      if (this.state.citySelected.length > 0){
+          console.log('citySsearhed', this.state.citySelected)
+          const slice = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).slice(this.state.offset, this.state.offset + this.state.perPage)
+          const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
+          this.setState({ filteredSearchJobs: searchedJobs.length })
+          console.log('searched gigs', searchedJobs)
+          console.log('sliced', slice)
+          const postData = slice.map((job) => {
+            return (
+              <article className="job-card" style={{
+                width: '100%',
+                marginBottom: '20px',
+              }}>
+                  <div className="company-logo-img">
+                    <img 
+                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                        style={{
+                        verticalAlign: 'middle',
+                        width: '116px',
+                        height: '116px',
+                        borderRadius: '50%',
+                        }} />  
+                  </div>
+                  <div className="job-title" style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'pre'
+                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                  <div className="skills-container">
+                    <div className="skill">Photoshop</div>
+                    <div className="skill">Illustrator</div>
+                    <div className="skill">HTML</div>
+                  </div>
+                  <button className="apply">Apply</button>
+                  <button className="save">Save Job</button>
+                  <a href="#"></a>
+              </article>
+            )
+          })
+      
+          this.setState({
+            pageCount: Math.ceil(searchedJobs.length / this.state.perPage),      
+            postData
+           })
+           this.setState({ loading: false })
+           return
+           console.log('page count', pageCount)
+      }
+      //if a city was not selected or search inputted 
       const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
-      console.log('container', container.filter(job => job.MatchedObjectDescriptor))
+      let map = {}
+      for (let job of container){
+        let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+        if (map[city] === undefined){
+            map[city] = 1
+        }
+        map[city] += 1
+      }
+      const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+      let keys = Object.keys(map)
+      let topCities = []
+      for (let key of keys){
+        if (sortedKeys.includes(map[key])){
+          topCities.push([key, map[key]])
+        }
+      }
+      this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]) })
       this.setState({ filteredSearchJobs: container.length})
       const postData = slice.map((job) => {
         return (
-          <article class="job-card" style={{
+          <article className="job-card" style={{
             width: '100%',
             marginBottom: '20px',
           }}>
-              <div class="company-logo-img">
+              <div className="company-logo-img">
                 <img 
                     src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
                     style={{
@@ -128,19 +219,19 @@ class Home extends Component {
                     borderRadius: '50%',
                     }} />  
               </div>
-              <div class="job-title" style={{
+              <div className="job-title" style={{
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'pre'
               }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
-              <div class="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-              <div class="skills-container">
-                <div class="skill">Photoshop</div>
-                <div class="skill">Illustrator</div>
-                <div class="skill">HTML</div>
+              <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+              <div className="skills-container">
+                <div className="skill">Photoshop</div>
+                <div className="skill">Illustrator</div>
+                <div className="skill">HTML</div>
               </div>
-              <button class="apply">Apply</button>
-              <button class="save">Save Job</button>
+              <button className="apply">Apply</button>
+              <button className="save">Save Job</button>
               <a href="#"></a>
           </article>
         )
@@ -152,18 +243,37 @@ class Home extends Component {
        })
        this.setState({ loading: false })
     } 
-
-
-
+    //if a search input has been entered and location not selected
     const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).slice(this.state.offset, this.state.offset + this.state.perPage)
     this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
-    const postData = slice.map((job) => {
+    const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
+    let map = {}
+      for (let job of searchedJobs){
+        let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+        if (map[city] === undefined){
+            map[city] = 1
+        }
+        map[city] += 1
+      }
+      const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+      let keys = Object.keys(map)
+      let topCities = []
+      for (let key of keys){
+        if (sortedKeys.includes(map[key])){
+          topCities.push([key, map[key]])
+        }
+      }
+
+      this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]) })
+      const postData = slice.map((job) => {
+       
       return (
-        <article class="job-card" style={{
+        <article 
+          className="job-card" style={{
           width: '100%',
           marginBottom: '20px',
         }}>
-            <div class="company-logo-img">
+            <div className="company-logo-img">
               <img 
                   src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
                   style={{
@@ -173,19 +283,19 @@ class Home extends Component {
                   borderRadius: '50%',
                   }} />  
             </div>
-            <div class="job-title" style={{
+            <div className="job-title" style={{
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'pre'
             }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
-            <div class="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-            <div class="skills-container">
-              <div class="skill">Photoshop</div>
-              <div class="skill">Illustrator</div>
-              <div class="skill">HTML</div>
+            <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+            <div className="skills-container">
+              <div className="skill">Photoshop</div>
+              <div className="skill">Illustrator</div>
+              <div className="skill">HTML</div>
             </div>
-            <button class="apply">Apply</button>
-            <button class="save">Save Job</button>
+            <button className="apply">Apply</button>
+            <button className="save">Save Job</button>
             <a href="#"></a>
         </article>
       )
@@ -196,21 +306,7 @@ class Home extends Component {
       postData
      })
      this.setState({ loading: false })
-  
   }
-
-  handlePageClick = (e) => {
-    const selectedPage = e.selected;
-    const offset = selectedPage * this.state.perPage;
-
-    this.setState({
-        currentPage: selectedPage,
-        offset: offset
-    }, () => {
-        this.getData()
-    });
-
-};
 
 
   componentDidMount(){
@@ -226,15 +322,17 @@ class Home extends Component {
   render() {
     const current = new Date();
     const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
-    const {  onChange } = this;
-
+    const {  onChange, showCityJobs } = this;
+    const { topCities, filteredSearchJobs, selections } = this.state
+    console.log('selections state', selections)
+    console.log('total', filteredSearchJobs)
     return (
       <div>
         <Header />
         <HeroSection />
         <div>
-          <div class="container">
-              <div class="container">
+          <div className="container">
+              <div className="container">
                   <div style={{
                     display: 'flex'
                   }}>
@@ -281,7 +379,7 @@ class Home extends Component {
                                         borderRadius: '5px'
                                       }}
                                       type="text" 
-                                      class="icon" 
+                                      className="icon" 
                                       placeholder="Search" 
                                       onChange={onChange}
                                     />
@@ -309,7 +407,14 @@ class Home extends Component {
                                         flexWrap: 'wrap',
                                         marginLeft: '-14%'
                                       }}>
-                                        <li style={{
+                                       {topCities.length > 0 ? 
+                                       topCities.map(city => {
+                                       const thecity = city[0].substring(0, city[0].indexOf(",")) 
+                                        return (
+                                        <li 
+                                          className={this.state.citySelected === thecity ? 'selected' : ''}
+                                          key={Math.random() * (1000000 - 1 + 1) + 1}
+                                          style={{
                                           display: 'flex',
                                           background: '#fff',
                                           border: '1px solid #E5E8ED',
@@ -326,12 +431,14 @@ class Home extends Component {
                                           cursor: 'pointer',
                                           borderRadius: '4px',
                                           userSelect: 'none',
-                                          mozUserSelect: 'none',
-                                          webkitUserSelect: 'none',
-                                          webkitTouchCallout: 'none',
+                                          MozUserSelect: 'none',
+                                          WebkitUserSelect: 'none',
+                                          WebkitTouchCallout: 'none',
                                           
                                         }}>
-                                            <a style={{
+                                            <a 
+                                            onClick={() => showCityJobs(thecity)}
+                                              style={{
                                               display: 'flex',
                                               height: '100%',
                                               width: '100%',
@@ -340,74 +447,32 @@ class Home extends Component {
                                               color: '#031b4e'
                                             }}>
                                               <div>
-                                                Boston, Ma
+                                                {thecity}
                                               </div>
-                                              <span> 838</span>
+                                              <span style={{
+                                                marginLeft: '7px'
+                                              }} className="badge badge-secondary">{city[1]}</span>
                                             </a>
                                         </li>
-                                        <li style={{
-                                          display: 'flex',
-                                          background: '#fff',
-                                          border: '1px solid #E5E8ED',
-                                          boxSizing: 'border-box',
-                                          height: '30px',
-                                          fontWeight: '600',
-                                          fontSize: '12px',
-                                          lineHeight: '17px',
-                                          color: '#031b4e',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          maxWidth: 'calc(50% - 0.25rem)',
-                                          width: 'calc(50% - 0.25rem)',
-                                          cursor: 'pointer',
-                                          borderRadius: '4px'
-                                        }}>
-                                            <a style={{
-                                              display: 'flex',
-                                              height: '100%',
-                                              width: '100%',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              color: '#031b4e'
-                                            }}>
-                                              <div>
-                                                Boston, Ma
-                                              </div>
-                                              <span> 838</span>
-                                            </a>
-                                        </li>
-                                        <li style={{
-                                          display: 'flex',
-                                          background: '#fff',
-                                          border: '1px solid #E5E8ED',
-                                          boxSizing: 'border-box',
-                                          height: '30px',
-                                          fontWeight: '600',
-                                          fontSize: '12px',
-                                          lineHeight: '17px',
-                                          color: '#031b4e',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          maxWidth: 'calc(50% - 0.25rem)',
-                                          width: 'calc(50% - 0.25rem)',
-                                          cursor: 'pointer',
-                                          borderRadius: '4px',
-                                        }}>
-                                            <a style={{
-                                              display: 'flex',
-                                              height: '100%',
-                                              width: '100%',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              color: '#031b4e',
-                                              
-                                            }}>
-                                              <div>
-                                                Boston, Ma
-                                              </div>
-                                              <span> 838</span>
-                                            </a>
-                                        </li>
+                                        )
+                                       })
+                                      :
+                                      <div style={{
+                                        margin: '50px auto',
+                                        display: 'flex',
+                                        listStyle: 'none',
+                                        outline: 'none',
+                                        justifyContent: 'center'
+                                      }}>
+                                        <RotatingLines
+                                        strokeColor="black"
+                                        strokeWidth="5"
+                                        animationDuration="0.75"
+                                        width="50"
+                                        visible={true}
+                                      /> 
+                                    </div>
+                                       }
                                       </ul>
                                     </div>
                                 </li>
@@ -415,7 +480,85 @@ class Home extends Component {
                         </div>
                     </div>                    
                      {/* the jobs */}
-                    <div class="col-8">
+                    <div className="col-8">
+                      {this.state.selections.length > 0 ? 
+                      this.state.selections.map(selection => {
+                        console.log('selection', selection)
+                        return (
+                          <div style={{
+                         display: 'flex',
+                         justifyContent: 'flex-start',
+                         background: '#fff',
+                         boxSizing: 'border-box',
+                         margin: '0',
+                         width: '720px',
+                         position: 'relative',
+                         zIndex: '1',
+                         marginBottom: '1rem',
+                         marginLeft: 'auto',
+                         marginRight: 'auto',
+                         flexWrap: 'wrap',
+                         marginLeft: '-1%'
+                       }}>
+                           <ul style={{
+                               display: 'flex',
+                               justifyContent: 'flex-start',
+                               background: '#fff',
+                               boxSizing: 'border-box',
+                               margin: '0',
+                               width: '720px',
+                               position: 'relative',
+                               zIndex: '1',
+                               marginBottom: '1rem',
+                               marginLeft: 'auto',
+                               marginRight: 'auto',
+                               flexWrap: 'wrap',    
+                           }}>
+                             <li style={{
+                               listStyle: 'none',
+                               marginLeft: '-11%'
+                             }}>
+                                 <ul style={{
+                                   display: 'flex',
+                                   flexWrap: 'wrap'
+                                 }}>
+                                   <li style={{
+                                     padding: '0',
+                                     display: 'flex',
+                                     alignItems: 'center',
+                                     background: 'rgba(0,0,0,0)',
+                                     
+                                   }}>
+                                       <a style={{
+                                         background: '#fff',
+                                         color: '#055eff',
+                                         fontSize: '25px',
+                                         fontWeight: '600',
+                                         display: 'flex',
+                                         alignItems: 'center',
+                                         border: '1px solid #055eff',
+                                         padding: '0 8px',
+                                         lineHeight: '32px',
+                                         borderRadius: '4px',
+                                       }}>
+                                         <span style={{
+                                           whiteSpace: 'nowrap'
+                                         }}>
+                                           {selection}
+                                         </span>
+                                         <span>
+                                           X
+                                         </span>
+                                       </a>
+                                   </li>
+                                 </ul>
+                             </li>
+                           </ul>
+                       </div>
+                       
+                      )})
+                        : ''
+                    } 
                       <div style={{
                           marginLeft: 'auto',
                           marginRight: 'auto',

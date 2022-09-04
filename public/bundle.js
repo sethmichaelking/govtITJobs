@@ -3540,12 +3540,46 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
       currentPage: 0,
       loading: false,
       search: '',
-      filteredSearchJobs: 0
+      filteredSearchJobs: 0,
+      topCities: '',
+      citySelected: '',
+      selections: []
     };
     this.getData = this.getData.bind(this);
     this.displayImage = this.displayImage.bind(this);
     this.handlePageClick = this.handlePageClick.bind(this);
     this.onChange = this.onChange.bind(this);
+    this.showCityJobs = this.showCityJobs.bind(this);
+  }
+
+  handlePageClick = e => {
+    const selectedPage = e.selected;
+    const offset = selectedPage * this.state.perPage;
+    this.setState({
+      currentPage: selectedPage,
+      offset: offset
+    }, () => {
+      this.getData();
+    });
+  };
+
+  showCityJobs(city) {
+    if (this.state.citySelected !== city) {
+      this.setState({
+        citySelected: city
+      });
+      const selections = [...this.state.selections];
+      selections.push(city);
+      this.setState({
+        selections: selections
+      });
+      this.getData(this.state.citySelected);
+    } else {
+      this.setState({
+        citySelected: ''
+      });
+      this.getData();
+    }
   }
 
   onChange(e) {
@@ -3632,7 +3666,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
       loading: true
     });
 
-    for (let i = 1; i < 3; i++) {
+    for (let i = 1; i < 5; i++) {
       const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
         method: 'GET',
         headers: {
@@ -3641,31 +3675,114 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
           "Authorization-Key": authKey
         }
       }).then(response => response.json()).then(data => {
-        const gigs = data.SearchResult.SearchResultItems; // console.log('gigs', gigs)
-
+        const gigs = data.SearchResult.SearchResultItems;
         container.push(...gigs);
       });
-    } //if there is nothing in the input, 
-    //if the filter length is 0, line 101,  container.slice(this.state.offset, this.
-    //else 
-    //container.filter().slice()
-
+    }
 
     if (this.state.search.length === 0) {
+      //if a city was selected
+      if (this.state.citySelected.length > 0) {
+        console.log('citySsearhed', this.state.citySelected);
+        const slice = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).slice(this.state.offset, this.state.offset + this.state.perPage);
+        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected));
+        this.setState({
+          filteredSearchJobs: searchedJobs.length
+        });
+        console.log('searched gigs', searchedJobs);
+        console.log('sliced', slice);
+        const postData = slice.map(job => {
+          return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("article", {
+            className: "job-card",
+            style: {
+              width: '100%',
+              marginBottom: '20px'
+            }
+          }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+            className: "company-logo-img"
+          }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("img", {
+            src: this.displayImage(job.MatchedObjectDescriptor.DepartmentName),
+            style: {
+              verticalAlign: 'middle',
+              width: '116px',
+              height: '116px',
+              borderRadius: '50%'
+            }
+          })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+            className: "job-title",
+            style: {
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'pre'
+            }
+          }, job.MatchedObjectDescriptor.PositionTitle), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+            className: "company-name"
+          }, job.MatchedObjectDescriptor.OrganizationName), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+            className: "skills-container"
+          }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+            className: "skill"
+          }, "Photoshop"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+            className: "skill"
+          }, "Illustrator"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+            className: "skill"
+          }, "HTML")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
+            className: "apply"
+          }, "Apply"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
+            className: "save"
+          }, "Save Job"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
+            href: "#"
+          }));
+        });
+        this.setState({
+          pageCount: Math.ceil(searchedJobs.length / this.state.perPage),
+          postData
+        });
+        this.setState({
+          loading: false
+        });
+        return;
+        console.log('page count', pageCount);
+      } //if a city was not selected or search inputted 
+
+
       const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage);
-      console.log('container', container.filter(job => job.MatchedObjectDescriptor));
+      let map = {};
+
+      for (let job of container) {
+        let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName;
+
+        if (map[city] === undefined) {
+          map[city] = 1;
+        }
+
+        map[city] += 1;
+      }
+
+      const sortedKeys = Object.keys(map).map(city => map[city]).sort((a, b) => b - a).slice(0, 5);
+      let keys = Object.keys(map);
+      let topCities = [];
+
+      for (let key of keys) {
+        if (sortedKeys.includes(map[key])) {
+          topCities.push([key, map[key]]);
+        }
+      }
+
+      this.setState({
+        topCities: topCities.sort((a, b) => b[1] - a[1])
+      });
       this.setState({
         filteredSearchJobs: container.length
       });
       const postData = slice.map(job => {
         return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("article", {
-          class: "job-card",
+          className: "job-card",
           style: {
             width: '100%',
             marginBottom: '20px'
           }
         }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-          class: "company-logo-img"
+          className: "company-logo-img"
         }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("img", {
           src: this.displayImage(job.MatchedObjectDescriptor.DepartmentName),
           style: {
@@ -3675,26 +3792,26 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
             borderRadius: '50%'
           }
         })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-          class: "job-title",
+          className: "job-title",
           style: {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'pre'
           }
         }, job.MatchedObjectDescriptor.PositionTitle), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-          class: "company-name"
+          className: "company-name"
         }, job.MatchedObjectDescriptor.OrganizationName), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-          class: "skills-container"
+          className: "skills-container"
         }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-          class: "skill"
+          className: "skill"
         }, "Photoshop"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-          class: "skill"
+          className: "skill"
         }, "Illustrator"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-          class: "skill"
+          className: "skill"
         }, "HTML")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
-          class: "apply"
+          className: "apply"
         }, "Apply"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
-          class: "save"
+          className: "save"
         }, "Save Job"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
           href: "#"
         }));
@@ -3706,21 +3823,48 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
       this.setState({
         loading: false
       });
-    }
+    } //if a search input has been entered and location not selected
+
 
     const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).slice(this.state.offset, this.state.offset + this.state.perPage);
     this.setState({
       filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length
     });
+    const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search));
+    let map = {};
+
+    for (let job of searchedJobs) {
+      let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName;
+
+      if (map[city] === undefined) {
+        map[city] = 1;
+      }
+
+      map[city] += 1;
+    }
+
+    const sortedKeys = Object.keys(map).map(city => map[city]).sort((a, b) => b - a).slice(0, 5);
+    let keys = Object.keys(map);
+    let topCities = [];
+
+    for (let key of keys) {
+      if (sortedKeys.includes(map[key])) {
+        topCities.push([key, map[key]]);
+      }
+    }
+
+    this.setState({
+      topCities: topCities.sort((a, b) => b[1] - a[1])
+    });
     const postData = slice.map(job => {
       return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("article", {
-        class: "job-card",
+        className: "job-card",
         style: {
           width: '100%',
           marginBottom: '20px'
         }
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        class: "company-logo-img"
+        className: "company-logo-img"
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("img", {
         src: this.displayImage(job.MatchedObjectDescriptor.DepartmentName),
         style: {
@@ -3730,26 +3874,26 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
           borderRadius: '50%'
         }
       })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        class: "job-title",
+        className: "job-title",
         style: {
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           whiteSpace: 'pre'
         }
       }, job.MatchedObjectDescriptor.PositionTitle), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        class: "company-name"
+        className: "company-name"
       }, job.MatchedObjectDescriptor.OrganizationName), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        class: "skills-container"
+        className: "skills-container"
       }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        class: "skill"
+        className: "skill"
       }, "Photoshop"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        class: "skill"
+        className: "skill"
       }, "Illustrator"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-        class: "skill"
+        className: "skill"
       }, "HTML")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
-        class: "apply"
+        className: "apply"
       }, "Apply"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("button", {
-        class: "save"
+        className: "save"
       }, "Save Job"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
         href: "#"
       }));
@@ -3760,16 +3904,6 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
     });
     this.setState({
       loading: false
-    });
-  };
-  handlePageClick = e => {
-    const selectedPage = e.selected;
-    const offset = selectedPage * this.state.perPage;
-    this.setState({
-      currentPage: selectedPage,
-      offset: offset
-    }, () => {
-      this.getData();
     });
   };
 
@@ -3785,12 +3919,20 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
     const current = new Date();
     const date = `${current.getDate()}/${current.getMonth() + 1}/${current.getFullYear()}`;
     const {
-      onChange
+      onChange,
+      showCityJobs
     } = this;
+    const {
+      topCities,
+      filteredSearchJobs,
+      selections
+    } = this.state;
+    console.log('selections state', selections);
+    console.log('total', filteredSearchJobs);
     return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_Header__WEBPACK_IMPORTED_MODULE_3__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(_HeroSection__WEBPACK_IMPORTED_MODULE_4__["default"], null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      class: "container"
+      className: "container"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      class: "container"
+      className: "container"
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
       style: {
         display: 'flex'
@@ -3841,7 +3983,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
         borderRadius: '5px'
       },
       type: "text",
-      class: "icon",
+      className: "icon",
       placeholder: "Search",
       onChange: onChange
     })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("li", {
@@ -3869,94 +4011,133 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_2__.Component {
         flexWrap: 'wrap',
         marginLeft: '-14%'
       }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("li", {
+    }, topCities.length > 0 ? topCities.map(city => {
+      const thecity = city[0].substring(0, city[0].indexOf(","));
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("li", {
+        className: this.state.citySelected === thecity ? 'selected' : '',
+        key: Math.random() * (1000000 - 1 + 1) + 1,
+        style: {
+          display: 'flex',
+          background: '#fff',
+          border: '1px solid #E5E8ED',
+          boxSizing: 'border-box',
+          height: '30px',
+          fontWeight: '600',
+          fontSize: '12px',
+          lineHeight: '17px',
+          color: '#031b4e',
+          alignItems: 'center',
+          justifyContent: 'center',
+          maxWidth: 'calc(50% - 0.25rem)',
+          width: 'calc(50% - 0.25rem)',
+          cursor: 'pointer',
+          borderRadius: '4px',
+          userSelect: 'none',
+          MozUserSelect: 'none',
+          WebkitUserSelect: 'none',
+          WebkitTouchCallout: 'none'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
+        onClick: () => showCityJobs(thecity),
+        style: {
+          display: 'flex',
+          height: '100%',
+          width: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#031b4e'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, thecity), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
+        style: {
+          marginLeft: '7px'
+        },
+        className: "badge badge-secondary"
+      }, city[1])));
+    }) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
       style: {
+        margin: '50px auto',
         display: 'flex',
-        background: '#fff',
-        border: '1px solid #E5E8ED',
-        boxSizing: 'border-box',
-        height: '30px',
-        fontWeight: '600',
-        fontSize: '12px',
-        lineHeight: '17px',
-        color: '#031b4e',
-        alignItems: 'center',
-        justifyContent: 'center',
-        maxWidth: 'calc(50% - 0.25rem)',
-        width: 'calc(50% - 0.25rem)',
-        cursor: 'pointer',
-        borderRadius: '4px',
-        userSelect: 'none',
-        mozUserSelect: 'none',
-        webkitUserSelect: 'none',
-        webkitTouchCallout: 'none'
+        listStyle: 'none',
+        outline: 'none',
+        justifyContent: 'center'
       }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
-      style: {
-        display: 'flex',
-        height: '100%',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#031b4e'
-      }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, "Boston, Ma"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", null, " 838"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("li", {
-      style: {
-        display: 'flex',
-        background: '#fff',
-        border: '1px solid #E5E8ED',
-        boxSizing: 'border-box',
-        height: '30px',
-        fontWeight: '600',
-        fontSize: '12px',
-        lineHeight: '17px',
-        color: '#031b4e',
-        alignItems: 'center',
-        justifyContent: 'center',
-        maxWidth: 'calc(50% - 0.25rem)',
-        width: 'calc(50% - 0.25rem)',
-        cursor: 'pointer',
-        borderRadius: '4px'
-      }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
-      style: {
-        display: 'flex',
-        height: '100%',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#031b4e'
-      }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, "Boston, Ma"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", null, " 838"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("li", {
-      style: {
-        display: 'flex',
-        background: '#fff',
-        border: '1px solid #E5E8ED',
-        boxSizing: 'border-box',
-        height: '30px',
-        fontWeight: '600',
-        fontSize: '12px',
-        lineHeight: '17px',
-        color: '#031b4e',
-        alignItems: 'center',
-        justifyContent: 'center',
-        maxWidth: 'calc(50% - 0.25rem)',
-        width: 'calc(50% - 0.25rem)',
-        cursor: 'pointer',
-        borderRadius: '4px'
-      }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
-      style: {
-        display: 'flex',
-        height: '100%',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#031b4e'
-      }
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", null, "Boston, Ma"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", null, " 838"))))))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
-      class: "col-8"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement(react_loader_spinner__WEBPACK_IMPORTED_MODULE_7__.RotatingLines, {
+      strokeColor: "black",
+      strokeWidth: "5",
+      animationDuration: "0.75",
+      width: "50",
+      visible: true
+    })))))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+      className: "col-8"
+    }, this.state.selections.length > 0 ? this.state.selections.map(selection => {
+      console.log('selection', selection);
+      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
+        style: {
+          display: 'flex',
+          justifyContent: 'flex-start',
+          background: '#fff',
+          boxSizing: 'border-box',
+          margin: '0',
+          width: '720px',
+          position: 'relative',
+          zIndex: '1',
+          marginBottom: '1rem',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          flexWrap: 'wrap',
+          marginLeft: '-1%'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("ul", {
+        style: {
+          display: 'flex',
+          justifyContent: 'flex-start',
+          background: '#fff',
+          boxSizing: 'border-box',
+          margin: '0',
+          width: '720px',
+          position: 'relative',
+          zIndex: '1',
+          marginBottom: '1rem',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          flexWrap: 'wrap'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("li", {
+        style: {
+          listStyle: 'none',
+          marginLeft: '-11%'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("ul", {
+        style: {
+          display: 'flex',
+          flexWrap: 'wrap'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("li", {
+        style: {
+          padding: '0',
+          display: 'flex',
+          alignItems: 'center',
+          background: 'rgba(0,0,0,0)'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("a", {
+        style: {
+          background: '#fff',
+          color: '#055eff',
+          fontSize: '25px',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          border: '1px solid #055eff',
+          padding: '0 8px',
+          lineHeight: '32px',
+          borderRadius: '4px'
+        }
+      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", {
+        style: {
+          whiteSpace: 'nowrap'
+        }
+      }, selection), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("span", null, "X")))))));
+    }) : '', /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_2___default().createElement("div", {
       style: {
         marginLeft: 'auto',
         marginRight: 'auto',

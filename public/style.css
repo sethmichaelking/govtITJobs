@@ -111,11 +111,18 @@ form div {
   margin: 1em;
   display: inline-block;
 }
+
 .icon {
   padding-left: 25px;
   background: url("https://static.thenounproject.com/png/101791-200.png") no-repeat left;
   background-size: 24px;
   background-position: 4px;
+}
+.selected {
+  background: #f0f6ff !important;
+  border: 1px solid #055eff !important;
+  box-sizing: border-box !important;
+  color: #055eff !important;
 }
 .pagination {
   margin: 15px auto;
