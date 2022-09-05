@@ -6,7 +6,9 @@ import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
 import SearchFilter from './SearchFilter'
 import { RotatingLines } from 'react-loader-spinner'
-
+import {
+  GiCancel
+} from 'react-icons/gi'
 class Home extends Component {
   constructor(){
     super()
@@ -20,13 +22,28 @@ class Home extends Component {
         filteredSearchJobs: 0,
         topCities: '',
         citySelected: '',
-        selections: []
+        selections: [],
+        salaryRanges: [],
+        salarySelected: ''
       }
       this.getData = this.getData.bind(this)
       this.displayImage = this.displayImage.bind(this)
       this.handlePageClick = this.handlePageClick.bind(this)
       this.onChange = this.onChange.bind(this)
       this.showCityJobs = this.showCityJobs.bind(this)
+      this.selectSalaryRnge = this.selectSalaryRnge.bind(this)
+
+  }
+  selectSalaryRnge(range){
+    console.log('clicked range', range)
+    if (this.state.selectSalaryRnge !== range){
+      this.setState({ salarySelected: range })
+      this.getData(this.state.salarySelected)
+    } 
+    if (this.state.salarySelected === range){
+      this.setState({ salarySelected: '' })
+      this.getData()
+    }
   }
   handlePageClick = (e) => {
     const selectedPage = e.selected;
@@ -44,9 +61,6 @@ class Home extends Component {
   showCityJobs(city){
     if (this.state.citySelected !== city){
     this.setState({ citySelected: city })
-    const selections = [...this.state.selections]
-    selections.push(city)
-    this.setState({ selections: selections });
     this.getData(this.state.citySelected)
     } else {
       this.setState({ citySelected: '' })
@@ -131,16 +145,129 @@ class Home extends Component {
         container.push(...gigs)
       });
     }
-    
+    //if no search selected
     if (this.state.search.length === 0 ){
-      //if a city was selected
-      if (this.state.citySelected.length > 0){
-          console.log('citySsearhed', this.state.citySelected)
+      //if no search but city selected && salary selected
+      if (this.state.citySelected.length > 0 && this.state.salarySelected.length > 0){
+        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
+              
+        let salary50to100 = []
+        let salary100to150= []
+        let salaryLessThan50 = []
+        let salaryGreatThen150 = []
+        for (let job of searchedJobs){
+          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          if (min > 50000 && max <= 100000){
+            salary50to100.push(job)
+          }
+          if (min > 100000 && min < 150000){
+            salary100to150.push(job)
+          }
+          if (max < 50000){
+            salaryLessThan50.push(job)
+          }
+          if (min > 150000){
+            salaryGreatThen150.push(job)
+          }
+        }
+        //shows amount next to salary range 
+        this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
+
+        var searchedJobsWithSalary
+
+        if (this.state.salarySelected === '<50K'){
+          searchedJobsWithSalary = searchedJobs.filter(job => salaryLessThan50.includes(job))
+        }
+        if (this.state.salarySelected === '100-150K'){
+          searchedJobsWithSalary = searchedJobs.filter(job => salary100to150.includes(job))
+        }
+        if (this.state.salarySelected === '150K+'){
+          searchedJobsWithSalary = searchedJobs.filter(job => salaryGreatThen150.includes(job))
+        }
+        if (this.state.salarySelected === '50-100K'){
+          searchedJobsWithSalary = searchedJobs.filter(job => salary50to100.includes(job))
+        }
+        
+        console.log('salary & city', searchedJobsWithSalary)
+        if (searchedJobsWithSalary.length === 0){
+          this.setState({ filteredSearchJobs: 0 })
+          return
+        }
+        this.setState({ filteredSearchJobs: searchedJobsWithSalary.length })
+        const slice = searchedJobsWithSalary.slice(this.state.offset, this.state.offset + this.state.perPage)
+        this.setState({ filteredSearchJobs: searchedJobsWithSalary.length })
+        const postData = slice.map((job) => {
+          return (
+            <article className="job-card" style={{
+              width: '100%',
+              marginBottom: '20px',
+            }}>
+                <div className="company-logo-img">
+                  <img 
+                      src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                      style={{
+                      verticalAlign: 'middle',
+                      width: '116px',
+                      height: '116px',
+                      borderRadius: '50%',
+                      }} />  
+                </div>
+                <div className="job-title" style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'pre'
+                }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                <div className="skills-container">
+                  <div className="skill">Photoshop</div>
+                  <div className="skill">Illustrator</div>
+                  <div className="skill">HTML</div>
+                </div>
+                <button className="apply">Apply</button>
+                <button className="save">Save Job</button>
+                <a href="#"></a>
+            </article>
+          )
+        })
+    
+        this.setState({
+          pageCount: Math.ceil(searchedJobs.length / this.state.perPage),      
+          postData
+         })
+         this.setState({ loading: false })
+         return
+      
+    }
+      //if no search no salary selected and city selected
+      if (this.state.citySelected.length > 0 && this.state.salarySelected.length === 0){
           const slice = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).slice(this.state.offset, this.state.offset + this.state.perPage)
           const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
-          this.setState({ filteredSearchJobs: searchedJobs.length })
-          console.log('searched gigs', searchedJobs)
-          console.log('sliced', slice)
+          
+          let salary50to100 = []
+          let salary100to150= []
+          let salaryLessThan50 = []
+          let salaryGreatThen150 = []
+          for (let job of searchedJobs){
+            let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+            let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+            if (min > 50000 && max <= 100000){
+              salary50to100.push(job)
+            }
+            if (min > 100000 && min < 150000){
+              salary100to150.push(job)
+            }
+            if (max < 50000){
+              salaryLessThan50.push(job)
+            }
+            if (min > 150000){
+              salaryGreatThen150.push(job)
+            }
+          }
+          
+         this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
+         console.log('salary ranges', this.state.salaryRanges)
+         this.setState({ filteredSearchJobs: searchedJobs.length })
           const postData = slice.map((job) => {
             return (
               <article className="job-card" style={{
@@ -181,10 +308,121 @@ class Home extends Component {
            })
            this.setState({ loading: false })
            return
-           console.log('page count', pageCount)
       }
-      //if a city was not selected or search inputted 
-      const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
+     
+      //if no search and no city
+      if (this.state.search.length === 0 && this.state.citySelected.length === 0){
+        //if no search and no city but salary selected
+        if (this.state.salarySelected.length > 0){
+          const searchedJobs = container
+          
+          let salary50to100 = []
+          let salary100to150= []
+          let salaryLessThan50 = []
+          let salaryGreatThen150 = []
+          for (let job of searchedJobs){
+            let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+            let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+            if (min > 50000 && max <= 100000){
+              salary50to100.push(job)
+            }
+            if (min > 100000 && min < 150000){
+              salary100to150.push(job)
+            }
+            if (max < 50000){
+              salaryLessThan50.push(job)
+            }
+            if (min > 150000){
+              salaryGreatThen150.push(job)
+            }
+          }
+          var jobs 
+          if (this.state.salarySelected === '100K-150K'){
+            console.log('this array', salary100to150, 'len', salary100to150.length)
+            jobs = salary100to150
+          }
+          if (this.state.salarySelected === '50-100K'){
+            console.log('this array', salary50to100, 'len', salary50to100.length)
+            jobs = salary50to100
+          }
+          if (this.state.salarySelected === '<50K'){
+            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
+            jobs = salaryLessThan50
+          }
+          if (this.state.salarySelected === '150K>'){
+            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
+            jobs = salaryGreatThen150
+          }
+          const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          this.setState({ filteredSearchJobs: jobs.length })
+          const postData = slice.map((job) => {
+            return (
+              <article className="job-card" style={{
+                width: '100%',
+                marginBottom: '20px',
+              }}>
+                  <div className="company-logo-img">
+                    <img 
+                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                        style={{
+                        verticalAlign: 'middle',
+                        width: '116px',
+                        height: '116px',
+                        borderRadius: '50%',
+                        }} />  
+                  </div>
+                  <div className="job-title" style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'pre'
+                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                  <div className="skills-container">
+                    <div className="skill">Photoshop</div>
+                    <div className="skill">Illustrator</div>
+                    <div className="skill">HTML</div>
+                  </div>
+                  <button className="apply">Apply</button>
+                  <button className="save">Save Job</button>
+                  <a href="#"></a>
+              </article>
+            )
+          })
+      
+          this.setState({
+            pageCount: Math.ceil(jobs.length / this.state.perPage),      
+            postData
+           })
+           this.setState({ loading: false })
+           return
+        }
+        const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
+
+        //segment jobs by salary
+        let salary50to100 = []
+        let salary100to150= []
+        let salaryLessThan50 = []
+        let salaryGreatThen150 = []
+        for (let job of container){
+          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          if (min > 50000 && max <= 100000){
+            salary50to100.push(job)
+          }
+          if (min > 100000 && min < 150000){
+            salary100to150.push(job)
+          }
+          if (max < 50000){
+            salaryLessThan50.push(job)
+          }
+          if (min > 150000){
+            salaryGreatThen150.push(job)
+          }
+        }
+
+      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
+        console.log('ranges to start', this.state.salaryRanges)
+      //top cities 
       let map = {}
       for (let job of container){
         let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
@@ -242,8 +480,13 @@ class Home extends Component {
         postData
        })
        this.setState({ loading: false })
-    } 
-    //if a search input has been entered and location not selected
+      } 
+
+
+    }
+      
+    //if a search was made and no city selected
+    if (this.state.search.length > 0 && this.state.citySelected.length === 0){
     const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).slice(this.state.offset, this.state.offset + this.state.perPage)
     this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
     const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
@@ -300,14 +543,79 @@ class Home extends Component {
         </article>
       )
     })
-
     this.setState({
       pageCount: Math.ceil(container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length / this.state.perPage),      
       postData
      })
      this.setState({ loading: false })
-  }
+     return
+    }
 
+     //if a search was made and a city selected
+     if (this.state.search.length > 0 && this.state.citySelected.length > 0){
+      const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).slice(this.state.offset, this.state.offset + this.state.perPage)
+      this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).length })
+      const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
+      let map = {}
+        for (let job of searchedJobs){
+          let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+          if (map[city] === undefined){
+              map[city] = 1
+          }
+          map[city] += 1
+        }
+        const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+        let keys = Object.keys(map)
+        let topCities = []
+        for (let key of keys){
+          if (sortedKeys.includes(map[key])){
+            topCities.push([key, map[key]])
+          }
+        }
+  
+        this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]) })
+        const postData = slice.map((job) => {
+         
+        return (
+          <article 
+            className="job-card" style={{
+            width: '100%',
+            marginBottom: '20px',
+          }}>
+              <div className="company-logo-img">
+                <img 
+                    src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                    style={{
+                    verticalAlign: 'middle',
+                    width: '116px',
+                    height: '116px',
+                    borderRadius: '50%',
+                    }} />  
+              </div>
+              <div className="job-title" style={{
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'pre'
+              }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+              <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+              <div className="skills-container">
+                <div className="skill">Photoshop</div>
+                <div className="skill">Illustrator</div>
+                <div className="skill">HTML</div>
+              </div>
+              <button className="apply">Apply</button>
+              <button className="save">Save Job</button>
+              <a href="#"></a>
+          </article>
+        )
+      })
+      this.setState({
+        pageCount: Math.ceil(container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).length / this.state.perPage),      
+        postData
+       })
+       this.setState({ loading: false })
+     }
+  }
 
   componentDidMount(){
     try {      
@@ -322,10 +630,8 @@ class Home extends Component {
   render() {
     const current = new Date();
     const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
-    const {  onChange, showCityJobs } = this;
-    const { topCities, filteredSearchJobs, selections } = this.state
-    console.log('selections state', selections)
-    console.log('total', filteredSearchJobs)
+    const {  onChange, showCityJobs, selectSalaryRnge } = this;
+    const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
     return (
       <div>
         <Header />
@@ -338,7 +644,7 @@ class Home extends Component {
                   }}>
                     {/* //the filters */}
                     <div className='row' style={{
-                      height: '40vh',
+                      height: '46vh',
                       flexDirection: 'column',
                       width: '400px',
                       marginRight: '20px',
@@ -346,7 +652,7 @@ class Home extends Component {
                         <div style={{
                           alignContent: 'flex-start',
                           display: 'flex',
-                          height: '40vh',
+                          height: '48vh',
                           flexDirection: 'column',
                           background: '#f8f9fa',
                           padding: '1.5rem 1rem',
@@ -456,35 +762,128 @@ class Home extends Component {
                                         </li>
                                         )
                                        })
-                                      :
-                                      <div style={{
-                                        margin: '50px auto',
-                                        display: 'flex',
-                                        listStyle: 'none',
-                                        outline: 'none',
-                                        justifyContent: 'center'
-                                      }}>
-                                        <RotatingLines
-                                        strokeColor="black"
-                                        strokeWidth="5"
-                                        animationDuration="0.75"
-                                        width="50"
-                                        visible={true}
-                                      /> 
-                                    </div>
+                                          :
+                                          <div style={{
+                                            margin: '50px auto',
+                                            display: 'flex',
+                                            listStyle: 'none',
+                                            outline: 'none',
+                                            justifyContent: 'center'
+                                          }}>
+                                            <RotatingLines
+                                            strokeColor="black"
+                                            strokeWidth="5"
+                                            animationDuration="0.75"
+                                            width="50"
+                                            visible={true}
+                                          /> 
+                                        </div>
                                        }
+                                      </ul>
+                                    </div>
+                                </li>
+                                <li style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  marginLeft: '-1.8em',
+                                  marginTop: '20px'
+                                }}>
+                                    <p style={{
+                                      fontWeight: '700',
+                                      fontSize: '18px',
+                                      lineHeight: '22px',
+                                      alignItems: 'center',
+                                      letterSpacing: '.6px',
+                                      color: '#203d7c',
+                                      textTransform: 'uppercase'
+                                    }}> Salary Range</p>
+                                    <div>
+                                      <ul style={{
+                                        display: 'flex',
+                                        width: '100%',
+                                        flexWrap: 'wrap',
+                                        marginLeft: '-14%'
+                                      }}>
+                                       {salaryRanges.length >= 3 ? 
+                                       salaryRanges.map(salaryRange => {
+                                          const range = salaryRange[0]
+                                          //this.state.salarySelected.length === 0 may not need
+                                          const numOfJobs = salaryRange[1]
+                                            return (
+                                            <li 
+                                              className={this.state.salarySelected === range ? 'selected' : ''}
+                                              key={Math.random() * (1000000 - 1 + 1) + 1}
+                                              style={{
+                                              display: 'flex',
+                                              background: '#fff',
+                                              border: '1px solid #E5E8ED',
+                                              boxSizing: 'border-box',
+                                              height: '30px',
+                                              fontWeight: '600',
+                                              fontSize: '12px',
+                                              lineHeight: '17px',
+                                              color: '#031b4e',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              maxWidth: 'calc(50% - 0.25rem)',
+                                              width: 'calc(50% - 0.25rem)',
+                                              cursor: 'pointer',
+                                              borderRadius: '4px',
+                                              userSelect: 'none',
+                                              MozUserSelect: 'none',
+                                              WebkitUserSelect: 'none',
+                                              WebkitTouchCallout: 'none'
+                                        }}>
+                                            <a 
+                                            onClick={() => selectSalaryRnge(range)}
+                                              style={{
+                                              display: 'flex',
+                                              height: '100%',
+                                              width: '100%',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              color: '#031b4e'
+                                            }}>
+                                              <div>
+                                                {range}
+                                              </div>
+                                              <span style={{
+                                                marginLeft: '7px'
+                                              }} className="badge badge-secondary">{numOfJobs}</span>
+                                            </a>
+                                        </li>
+                                        )
+                                       })
+                                          :
+                                          <div style={{
+                                            margin: '50px auto',
+                                            display: 'flex',
+                                            listStyle: 'none',
+                                            outline: 'none',
+                                            justifyContent: 'center'
+                                          }}>
+                                            <RotatingLines
+                                            strokeColor="black"
+                                            strokeWidth="5"
+                                            animationDuration="0.75"
+                                            width="50"
+                                            visible={true}
+                                          /> 
+                                        </div>
+                                      } 
                                       </ul>
                                     </div>
                                 </li>
                             </ul>
                         </div>
-                    </div>                    
+                    </div>  
                      {/* the jobs */}
                     <div className="col-8">
-                      {this.state.selections.length > 0 ? 
-                      this.state.selections.map(selection => {
-                        console.log('selection', selection)
-                        return (
+                      <div style={{
+                        display: 'flex'
+                      }}>
+                      {this.state.citySelected.length > 0 ? 
                           <div style={{
                          display: 'flex',
                          justifyContent: 'flex-start',
@@ -522,7 +921,9 @@ class Home extends Component {
                                    display: 'flex',
                                    flexWrap: 'wrap'
                                  }}>
-                                   <li style={{
+                                   <li 
+                                   onClick={() => showCityJobs(selection)}
+                                   style={{
                                      padding: '0',
                                      display: 'flex',
                                      alignItems: 'center',
@@ -532,7 +933,7 @@ class Home extends Component {
                                        <a style={{
                                          background: '#fff',
                                          color: '#055eff',
-                                         fontSize: '25px',
+                                         fontSize: '16px',
                                          fontWeight: '600',
                                          display: 'flex',
                                          alignItems: 'center',
@@ -544,10 +945,13 @@ class Home extends Component {
                                          <span style={{
                                            whiteSpace: 'nowrap'
                                          }}>
-                                           {selection}
+                                           Location: {this.state.citySelected}
                                          </span>
-                                         <span>
-                                           X
+                                         <span style={{
+                                          marginLeft: '7px',
+                                          marginBottom: '2px'
+                                         }}>
+                                            <GiCancel />
                                          </span>
                                        </a>
                                    </li>
@@ -555,10 +959,89 @@ class Home extends Component {
                              </li>
                            </ul>
                        </div>
-                       
-                      )})
-                        : ''
+                        : null
                     } 
+                    {
+                      this.state.salarySelected.length > 0 ?
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                        background: '#fff',
+                        boxSizing: 'border-box',
+                        margin: '0',
+                        width: '720px',
+                        position: 'relative',
+                        zIndex: '1',
+                        marginBottom: '1rem',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        flexWrap: 'wrap',
+                        marginLeft: '-1%'
+                      }}>
+                          <ul style={{
+                              display: 'flex',
+                              justifyContent: 'flex-start',
+                              background: '#fff',
+                              boxSizing: 'border-box',
+                              margin: '0',
+                              width: '720px',
+                              position: 'relative',
+                              zIndex: '1',
+                              marginBottom: '1rem',
+                              marginLeft: 'auto',
+                              marginRight: 'auto',
+                              flexWrap: 'wrap',    
+                          }}>
+                            <li style={{
+                              listStyle: 'none',
+                              marginLeft: '-11%'
+                            }}>
+                                <ul style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap'
+                                }}>
+                                  <li 
+                                  onClick={() => selectSalaryRnge(selection)}
+                                  style={{
+                                    padding: '0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    background: 'rgba(0,0,0,0)',
+                                    
+                                  }}>
+                                      <a style={{
+                                        background: '#fff',
+                                        color: '#055eff',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        border: '1px solid #055eff',
+                                        padding: '0 8px',
+                                        lineHeight: '32px',
+                                        borderRadius: '4px',
+                                      }}>
+                                        <span style={{
+                                          whiteSpace: 'nowrap'
+                                        }}>
+                                          Salary Range: {this.state.salarySelected}
+                                        </span>
+                                        <span style={{
+                                         marginLeft: '7px',
+                                         marginBottom: '2px'
+                                        }}>
+                                           <GiCancel />
+                                        </span>
+                                      </a>
+                                  </li>
+                                </ul>
+                            </li>
+                          </ul>
+                      </div>
+                      :
+                      null
+                    }
+                    </div>
                       <div style={{
                           marginLeft: 'auto',
                           marginRight: 'auto',
@@ -585,6 +1068,8 @@ class Home extends Component {
                       /> 
                     </div>
                     : this.state.postData}
+                    {
+                      this.state.loading ? '' :
                       <ReactPaginate
                             previousLabel={"prev"}
                             nextLabel={"next"}
@@ -597,6 +1082,7 @@ class Home extends Component {
                             containerClassName={"pagination"}
                             subContainerClassName={"pages pagination"}
                             activeClassName={"active"}/>
+                    }
                     </div>
                   </div>
               </div>
