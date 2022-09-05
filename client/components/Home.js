@@ -48,7 +48,7 @@ class Home extends Component {
   handlePageClick = (e) => {
     const selectedPage = e.selected;
     const offset = selectedPage * this.state.perPage;
-
+    console.log('page', selectedPage, 'off')
     this.setState({
         currentPage: selectedPage,
         offset: offset
@@ -194,7 +194,6 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: 0 })
           return
         }
-        this.setState({ filteredSearchJobs: searchedJobsWithSalary.length })
         const slice = searchedJobsWithSalary.slice(this.state.offset, this.state.offset + this.state.perPage)
         this.setState({ filteredSearchJobs: searchedJobsWithSalary.length })
         const postData = slice.map((job) => {
@@ -266,7 +265,6 @@ class Home extends Component {
           }
           
          this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
-         console.log('salary ranges', this.state.salaryRanges)
          this.setState({ filteredSearchJobs: searchedJobs.length })
           const postData = slice.map((job) => {
             return (
@@ -340,20 +338,7 @@ class Home extends Component {
           if (this.state.salarySelected === '100K-150K'){
             console.log('this array', salary100to150, 'len', salary100to150.length)
             jobs = salary100to150
-          }
-          if (this.state.salarySelected === '50-100K'){
-            console.log('this array', salary50to100, 'len', salary50to100.length)
-            jobs = salary50to100
-          }
-          if (this.state.salarySelected === '<50K'){
-            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
-            jobs = salaryLessThan50
-          }
-          if (this.state.salarySelected === '150K>'){
-            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
-            jobs = salaryGreatThen150
-          }
-          const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+            const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
@@ -395,6 +380,145 @@ class Home extends Component {
            })
            this.setState({ loading: false })
            return
+          }
+          if (this.state.salarySelected === '50-100K'){
+            console.log('this array', salary50to100, 'len', salary50to100.length)
+            jobs = salary50to100
+            const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          this.setState({ filteredSearchJobs: jobs.length })
+          const postData = slice.map((job) => {
+            return (
+              <article className="job-card" style={{
+                width: '100%',
+                marginBottom: '20px',
+              }}>
+                  <div className="company-logo-img">
+                    <img 
+                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                        style={{
+                        verticalAlign: 'middle',
+                        width: '116px',
+                        height: '116px',
+                        borderRadius: '50%',
+                        }} />  
+                  </div>
+                  <div className="job-title" style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'pre'
+                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                  <div className="skills-container">
+                    <div className="skill">Photoshop</div>
+                    <div className="skill">Illustrator</div>
+                    <div className="skill">HTML</div>
+                  </div>
+                  <button className="apply">Apply</button>
+                  <button className="save">Save Job</button>
+                  <a href="#"></a>
+              </article>
+            )
+          })
+      
+          this.setState({
+            pageCount: Math.ceil(jobs.length / this.state.perPage),      
+            postData
+           })
+           this.setState({ loading: false })
+           return
+          }
+          if (this.state.salarySelected === '<50K'){
+            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
+            jobs = salaryLessThan50
+            const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          this.setState({ filteredSearchJobs: jobs.length })
+          const postData = slice.map((job) => {
+            return (
+              <article className="job-card" style={{
+                width: '100%',
+                marginBottom: '20px',
+              }}>
+                  <div className="company-logo-img">
+                    <img 
+                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                        style={{
+                        verticalAlign: 'middle',
+                        width: '116px',
+                        height: '116px',
+                        borderRadius: '50%',
+                        }} />  
+                  </div>
+                  <div className="job-title" style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'pre'
+                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                  <div className="skills-container">
+                    <div className="skill">Photoshop</div>
+                    <div className="skill">Illustrator</div>
+                    <div className="skill">HTML</div>
+                  </div>
+                  <button className="apply">Apply</button>
+                  <button className="save">Save Job</button>
+                  <a href="#"></a>
+              </article>
+            )
+          })
+      
+          this.setState({
+            pageCount: Math.ceil(jobs.length / this.state.perPage),      
+            postData
+           })
+           this.setState({ loading: false })
+           return
+          }
+          if (this.state.salarySelected === '150K>'){
+            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
+            jobs = salaryGreatThen150
+            const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          this.setState({ filteredSearchJobs: jobs.length })
+          const postData = slice.map((job) => {
+            return (
+              <article className="job-card" style={{
+                width: '100%',
+                marginBottom: '20px',
+              }}>
+                  <div className="company-logo-img">
+                    <img 
+                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                        style={{
+                        verticalAlign: 'middle',
+                        width: '116px',
+                        height: '116px',
+                        borderRadius: '50%',
+                        }} />  
+                  </div>
+                  <div className="job-title" style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'pre'
+                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                  <div className="skills-container">
+                    <div className="skill">Photoshop</div>
+                    <div className="skill">Illustrator</div>
+                    <div className="skill">HTML</div>
+                  </div>
+                  <button className="apply">Apply</button>
+                  <button className="save">Save Job</button>
+                  <a href="#"></a>
+              </article>
+            )
+          })
+      
+          this.setState({
+            pageCount: Math.ceil(jobs.length / this.state.perPage),      
+            postData
+           })
+           this.setState({ loading: false })
+           return
+          }
         }
         const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
 
@@ -487,9 +611,97 @@ class Home extends Component {
       
     //if a search was made and no city selected
     if (this.state.search.length > 0 && this.state.citySelected.length === 0){
+      //if search was made and no city selected BUT salary selected
+      if (this.state.salarySelected.length > 0){
+        console.log('search is 0, city 0, but salary', this.state.salarySelected)
+        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
+          
+          let salary50to100 = []
+          let salary100to150= []
+          let salaryLessThan50 = []
+          let salaryGreatThen150 = []
+          for (let job of searchedJobs){
+            let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+            let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+            if (min > 50000 && max <= 100000){
+              salary50to100.push(job)
+            }
+            if (min > 100000 && min < 150000){
+              salary100to150.push(job)
+            }
+            if (max < 50000){
+              salaryLessThan50.push(job)
+            }
+            if (min > 150000){
+              salaryGreatThen150.push(job)
+            }
+          }
+          var jobs 
+          if (this.state.salarySelected === '100K-150K'){
+            console.log('this array', salary100to150, 'len', salary100to150.length)
+            jobs = salary100to150
+          }
+          if (this.state.salarySelected === '50-100K'){
+            console.log('this array', salary50to100, 'len', salary50to100.length)
+            jobs = salary50to100
+          }
+          if (this.state.salarySelected === '<50K'){
+            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
+            jobs = salaryLessThan50
+          }
+          if (this.state.salarySelected === '150K>'){
+            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
+            jobs = salaryGreatThen150
+          }
+          const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          this.setState({ filteredSearchJobs: jobs.length })
+          const postData = slice.map((job) => {
+            return (
+              <article className="job-card" style={{
+                width: '100%',
+                marginBottom: '20px',
+              }}>
+                  <div className="company-logo-img">
+                    <img 
+                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                        style={{
+                        verticalAlign: 'middle',
+                        width: '116px',
+                        height: '116px',
+                        borderRadius: '50%',
+                        }} />  
+                  </div>
+                  <div className="job-title" style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'pre'
+                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                  <div className="skills-container">
+                    <div className="skill">Photoshop</div>
+                    <div className="skill">Illustrator</div>
+                    <div className="skill">HTML</div>
+                  </div>
+                  <button className="apply">Apply</button>
+                  <button className="save">Save Job</button>
+                  <a href="#"></a>
+              </article>
+            )
+          })
+      
+          this.setState({
+            pageCount: Math.ceil(jobs.length / this.state.perPage),      
+            postData
+           })
+           this.setState({ loading: false })
+           return
+      }
+
     const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).slice(this.state.offset, this.state.offset + this.state.perPage)
     this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
     const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
+    
+    
     let map = {}
       for (let job of searchedJobs){
         let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
@@ -506,6 +718,30 @@ class Home extends Component {
           topCities.push([key, map[key]])
         }
       }
+        //segment jobs by salary
+        let salary50to100 = []
+        let salary100to150= []
+        let salaryLessThan50 = []
+        let salaryGreatThen150 = []
+
+        for (let job of searchedJobs){
+          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          if (min > 50000 && max <= 100000){
+            salary50to100.push(job)
+          }
+          if (min > 100000 && min < 150000){
+            salary100to150.push(job)
+          }
+          if (max < 50000){
+            salaryLessThan50.push(job)
+          }
+          if (min > 150000){
+            salaryGreatThen150.push(job)
+          }
+        }
+
+      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
 
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]) })
       const postData = slice.map((job) => {
@@ -553,6 +789,94 @@ class Home extends Component {
 
      //if a search was made and a city selected
      if (this.state.search.length > 0 && this.state.citySelected.length > 0){
+      //if a search was made and a city selected AND a salary selected
+      if (this.state.salarySelected.length > 0){
+        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
+        console.log('search and city AANNDD salary')
+        let salary50to100 = []
+        let salary100to150= []
+        let salaryLessThan50 = []
+        let salaryGreatThen150 = []
+
+        for (let job of searchedJobs){
+          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          if (min > 50000 && max <= 100000){
+            salary50to100.push(job)
+          }
+          if (min > 100000 && min < 150000){
+            salary100to150.push(job)
+          }
+          if (max < 50000){
+            salaryLessThan50.push(job)
+          }
+          if (min > 150000){
+            salaryGreatThen150.push(job)
+          }
+        }
+        var jobs 
+          if (this.state.salarySelected === '100K-150K'){
+            console.log('this array', salary100to150, 'len', salary100to150.length)
+            jobs = salary100to150
+          }
+          if (this.state.salarySelected === '50-100K'){
+            console.log('this array', salary50to100, 'len', salary50to100.length)
+            jobs = salary50to100
+          }
+          if (this.state.salarySelected === '<50K'){
+            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
+            jobs = salaryLessThan50
+          }
+          if (this.state.salarySelected === '150K>'){
+            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
+            jobs = salaryGreatThen150
+          }
+      const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+      this.setState({ filteredSearchJobs: jobs.length })
+      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
+      const postData = slice.map((job) => {
+       
+      return (
+        <article 
+          className="job-card" style={{
+          width: '100%',
+          marginBottom: '20px',
+        }}>
+            <div className="company-logo-img">
+              <img 
+                  src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                  style={{
+                  verticalAlign: 'middle',
+                  width: '116px',
+                  height: '116px',
+                  borderRadius: '50%',
+                  }} />  
+            </div>
+            <div className="job-title" style={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'pre'
+            }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+            <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+            <div className="skills-container">
+              <div className="skill">Photoshop</div>
+              <div className="skill">Illustrator</div>
+              <div className="skill">HTML</div>
+            </div>
+            <button className="apply">Apply</button>
+            <button className="save">Save Job</button>
+            <a href="#"></a>
+        </article>
+      )
+    })
+    this.setState({
+      pageCount: Math.ceil(jobs.length / this.state.perPage),      
+      postData
+     })
+     this.setState({ loading: false })
+     return
+    }
+      //if a search was made and city seleted (no salary selected)
       const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).slice(this.state.offset, this.state.offset + this.state.perPage)
       this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).length })
       const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
@@ -572,8 +896,28 @@ class Home extends Component {
             topCities.push([key, map[key]])
           }
         }
-  
-        this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]) })
+        let salary50to100 = []
+        let salary100to150= []
+        let salaryLessThan50 = []
+        let salaryGreatThen150 = []
+
+        for (let job of searchedJobs){
+          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
+          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          if (min > 50000 && max <= 100000){
+            salary50to100.push(job)
+          }
+          if (min > 100000 && min < 150000){
+            salary100to150.push(job)
+          }
+          if (max < 50000){
+            salaryLessThan50.push(job)
+          }
+          if (min > 150000){
+            salaryGreatThen150.push(job)
+          }
+        }
+        this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
         const postData = slice.map((job) => {
          
         return (
@@ -836,7 +1180,7 @@ class Home extends Component {
                                               WebkitTouchCallout: 'none'
                                         }}>
                                             <a 
-                                            onClick={() => selectSalaryRnge(range)}
+                                              onClick={() => numOfJobs > 0 ? selectSalaryRnge(range) : null}
                                               style={{
                                               display: 'flex',
                                               height: '100%',
