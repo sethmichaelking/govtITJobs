@@ -1,11 +1,10 @@
 import {connect} from 'react-redux'
-import axios from 'axios'
 import React, { Component } from 'react'
 import Header from './Header'
 import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
-import SearchFilter from './SearchFilter'
 import { RotatingLines } from 'react-loader-spinner'
+import { setForcePage, updateForcedPage } from '../store'
 import {
   GiCancel
 } from 'react-icons/gi'
@@ -24,7 +23,8 @@ class Home extends Component {
         citySelected: '',
         selections: [],
         salaryRanges: [],
-        salarySelected: ''
+        salarySelected: '',
+        initialValue: 0
       }
       this.getData = this.getData.bind(this)
       this.displayImage = this.displayImage.bind(this)
@@ -32,8 +32,27 @@ class Home extends Component {
       this.onChange = this.onChange.bind(this)
       this.showCityJobs = this.showCityJobs.bind(this)
       this.selectSalaryRnge = this.selectSalaryRnge.bind(this)
-
+      this.setCurrentPage = this.setCurrentPage.bind(this)
   }
+
+  // UNSAFE_componentWillReceiveProps(nextProps) {
+  //   let pre = JSON.stringify(this.props.forcedPage)
+  //   let next = JSON.stringify(nextProps.forcedPage)
+  //   if (pre !== next) {
+  //     this.setState({currentPage: 0})
+  //   }
+  // }
+  setCurrentPage(page){
+    //if no search and no city and no salary, just return whichever page is selected
+    if (this.state.citySelected.length === 0 && this.state.search.length === 0 && this.state.salarySelected.length === 0){
+      return page
+    }
+    if (this.state.search.length > 0 && this.state.salarySelected.length === 0 && this.state.citySelected.length === 0){
+        return page
+  }
+  page = 0
+  return page
+}
   selectSalaryRnge(range){
     console.log('clicked range', range)
     if (this.state.selectSalaryRnge !== range){
@@ -41,6 +60,7 @@ class Home extends Component {
       this.getData(this.state.salarySelected)
     } 
     if (this.state.salarySelected === range){
+      this.setState({ currentPage: 0 })
       this.setState({ salarySelected: '' })
       this.getData()
     }
@@ -48,14 +68,15 @@ class Home extends Component {
   handlePageClick = (e) => {
     const selectedPage = e.selected;
     const offset = selectedPage * this.state.perPage;
-    console.log('page', selectedPage, 'off')
+    console.log('page', selectedPage, 'off', offset)
     this.setState({
         currentPage: selectedPage,
         offset: offset
     }, () => {
-        this.getData()
+      this.getData()
+      this.props.setForcedPage(this.state.currentPage)
     });
-
+    window.scrollTo(0, 0)
 };
 
   showCityJobs(city){
@@ -63,11 +84,13 @@ class Home extends Component {
     this.setState({ citySelected: city })
     this.getData(this.state.citySelected)
     } else {
+      this.setState({ currentPage: 0 })
       this.setState({ citySelected: '' })
       this.getData()
     }
   }
   onChange(e){
+    this.setState({ currentPage: 0 })
     this.setState({search: e.target.value })
     this.getData(this.state.search)
   }
@@ -129,7 +152,7 @@ class Home extends Component {
     var userAgent = 'sethkingriter@gmail.com'
     var authKey = 'InzNEWOLXdrBHP/62f3tqX6pOhSGmFDaTdHOB9zEmbg=' 
     this.setState({ loading: true })
-    for (let i = 1; i < 5; i++){
+    for (let i = 1; i <= 2; i++){
       const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
         method: 'GET',      
         headers: {          
@@ -189,12 +212,12 @@ class Home extends Component {
           searchedJobsWithSalary = searchedJobs.filter(job => salary50to100.includes(job))
         }
         
-        console.log('salary & city', searchedJobsWithSalary)
         if (searchedJobsWithSalary.length === 0){
           this.setState({ filteredSearchJobs: 0 })
           return
         }
         const slice = searchedJobsWithSalary.slice(this.state.offset, this.state.offset + this.state.perPage)
+        
         this.setState({ filteredSearchJobs: searchedJobsWithSalary.length })
         const postData = slice.map((job) => {
           return (
@@ -336,9 +359,8 @@ class Home extends Component {
           }
           var jobs 
           if (this.state.salarySelected === '100K-150K'){
-            console.log('this array', salary100to150, 'len', salary100to150.length)
-            jobs = salary100to150
-            const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          jobs = salary100to150
+          const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
@@ -382,7 +404,6 @@ class Home extends Component {
            return
           }
           if (this.state.salarySelected === '50-100K'){
-            console.log('this array', salary50to100, 'len', salary50to100.length)
             jobs = salary50to100
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
@@ -428,7 +449,6 @@ class Home extends Component {
            return
           }
           if (this.state.salarySelected === '<50K'){
-            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
             jobs = salaryLessThan50
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
@@ -474,7 +494,6 @@ class Home extends Component {
            return
           }
           if (this.state.salarySelected === '150K>'){
-            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
             jobs = salaryGreatThen150
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
@@ -521,6 +540,7 @@ class Home extends Component {
           }
         }
         const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
+        console.log('offset', this.state.offset, 'state per page', this.state.perPage)
 
         //segment jobs by salary
         let salary50to100 = []
@@ -545,7 +565,6 @@ class Home extends Component {
         }
 
       this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
-        console.log('ranges to start', this.state.salaryRanges)
       //top cities 
       let map = {}
       for (let job of container){
@@ -613,7 +632,6 @@ class Home extends Component {
     if (this.state.search.length > 0 && this.state.citySelected.length === 0){
       //if search was made and no city selected BUT salary selected
       if (this.state.salarySelected.length > 0){
-        console.log('search is 0, city 0, but salary', this.state.salarySelected)
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
           
           let salary50to100 = []
@@ -638,22 +656,19 @@ class Home extends Component {
           }
           var jobs 
           if (this.state.salarySelected === '100K-150K'){
-            console.log('this array', salary100to150, 'len', salary100to150.length)
             jobs = salary100to150
           }
           if (this.state.salarySelected === '50-100K'){
-            console.log('this array', salary50to100, 'len', salary50to100.length)
             jobs = salary50to100
           }
           if (this.state.salarySelected === '<50K'){
-            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
             jobs = salaryLessThan50
           }
           if (this.state.salarySelected === '150K>'){
-            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
             jobs = salaryGreatThen150
           }
           const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          console.log('offset', this.state.offset, 'state per page', this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
@@ -792,7 +807,6 @@ class Home extends Component {
       //if a search was made and a city selected AND a salary selected
       if (this.state.salarySelected.length > 0){
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
-        console.log('search and city AANNDD salary')
         let salary50to100 = []
         let salary100to150= []
         let salaryLessThan50 = []
@@ -816,19 +830,15 @@ class Home extends Component {
         }
         var jobs 
           if (this.state.salarySelected === '100K-150K'){
-            console.log('this array', salary100to150, 'len', salary100to150.length)
             jobs = salary100to150
           }
           if (this.state.salarySelected === '50-100K'){
-            console.log('this array', salary50to100, 'len', salary50to100.length)
             jobs = salary50to100
           }
           if (this.state.salarySelected === '<50K'){
-            console.log('this array', salaryLessThan50, 'len', salaryLessThan50.length)
             jobs = salaryLessThan50
           }
           if (this.state.salarySelected === '150K>'){
-            console.log('this array', salaryGreatThen150, 'len', salaryGreatThen150)
             jobs = salaryGreatThen150
           }
       const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
@@ -964,6 +974,7 @@ class Home extends Component {
   componentDidMount(){
     try {      
       this.getData()
+      this.props.forcePage()
     }
     catch(err){
       console.log(err)
@@ -974,8 +985,9 @@ class Home extends Component {
   render() {
     const current = new Date();
     const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
-    const {  onChange, showCityJobs, selectSalaryRnge } = this;
+    const {  onChange, showCityJobs, selectSalaryRnge, setCurrentPage } = this;
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
+    console.log(this.props.forcedPage)
     return (
       <div>
         <Header />
@@ -1415,11 +1427,14 @@ class Home extends Component {
                     {
                       this.state.loading ? '' :
                       <ReactPaginate
+                          
                             previousLabel={"prev"}
                             nextLabel={"next"}
                             breakLabel={"..."}
                             breakClassName={"break-me"}
-                            pageCount={this.state.pageCount}
+                            // onClick={()=> forcePage(this.state.currentPage)}
+                            forcePage = {this.state.currentPage}
+                            pageCount={Math.ceil(this.state.pageCount * 1)}
                             marginPagesDisplayed={2}
                             pageRangeDisplayed={5}
                             onPageChange={this.handlePageClick}
@@ -1441,10 +1456,22 @@ class Home extends Component {
 
 const mapState = state => {
   return {
-    username: state.auth.username
+    username: state.auth.username,
+    forcedPage: state.forcePage
   }
 }
 
-export default connect(mapState)(Home)
+const mapDispatch = (dispatch) => {
+  return {
+    forcePage: () => {
+      dispatch(setForcePage())
+    },
+    setForcedPage: (pageNumber) => {
+      dispatch(updateForcedPage(pageNumber))
+    }
+  }
+}
+
+export default connect(mapState, mapDispatch)(Home)
 
 
