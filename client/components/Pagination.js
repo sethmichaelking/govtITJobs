@@ -1,9 +1,9 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-const Pagination = ({ numPages, setCurrentPage, pageNumber }) => {
-
+const Pagination = ({ numPages, setCurrentPage, currentPage, pageNumber }) => {
+  console.log('pageNumber', pageNumber)
   const pageNumbers = [...Array(numPages + 1).keys()].slice(1);
-  console.log(pageNumbers)
+  console.log('page number', pageNumbers)
   return (
     <nav id="page-list">
       <ul id="pages">
@@ -12,7 +12,6 @@ const Pagination = ({ numPages, setCurrentPage, pageNumber }) => {
             <li key={pgNumber} className={pageNumber === pgNumber ? 'pageSelected' : ''}>
               <Link
                 onClick={() => setCurrentPage(pgNumber)}
-                to={`/books/page/${pgNumber}`}
               >
                 {pgNumber}
               </Link>
