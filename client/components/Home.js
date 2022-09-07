@@ -31,7 +31,13 @@ class Home extends Component {
         selections: [],
         salaryRanges: [],
         salarySelected: '',
-        initialValue: 0
+        initialValue: 0,
+        jobSummary: '',
+        contactEmail: '',
+        whatToExpect: '',
+        majorDuties: '',
+        keyRequirements: [],
+        applyClicked: false
       }
       this.getData = this.getData.bind(this)
       this.displayImage = this.displayImage.bind(this)
@@ -239,7 +245,16 @@ class Home extends Component {
         this.setState({ filteredSearchJobs: searchedJobsWithSalary.length })
         const postData = slice.map((job) => {
           return (
-            <article className="job-card" style={{
+            <article 
+              onClick={()=> this.setState({ 
+                show: true, 
+                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+              })}
+              className="job-card" style={{
               width: '100%',
               marginBottom: '20px',
             }}>
@@ -264,7 +279,11 @@ class Home extends Component {
                   <div className="skill">Illustrator</div>
                   <div className="skill">HTML</div>
                 </div>
-                <button className="apply">Apply</button>
+                <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
                 <button className="save">Save Job</button>
                 <a href="#"></a>
             </article>
@@ -309,7 +328,16 @@ class Home extends Component {
          this.setState({ filteredSearchJobs: searchedJobs.length })
           const postData = slice.map((job) => {
             return (
-              <article className="job-card" style={{
+              <article 
+                onClick={()=> this.setState({ 
+                  show: true, 
+                  jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+                  contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+                  whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+                  majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+                  keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+                })}
+                className="job-card" style={{
                 width: '100%',
                 marginBottom: '20px',
               }}>
@@ -334,7 +362,11 @@ class Home extends Component {
                     <div className="skill">Illustrator</div>
                     <div className="skill">HTML</div>
                   </div>
-                  <button className="apply">Apply</button>
+                  <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
                   <button className="save">Save Job</button>
                   <a href="#"></a>
               </article>
@@ -382,7 +414,15 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
-              <div>
+              <div 
+              onClick={()=> this.setState({ 
+                show: true, 
+                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+              })}>
                 <div>
                   <article 
                     className="job-card" style={{
@@ -410,7 +450,11 @@ class Home extends Component {
                         <div className="skill">Illustrator</div>
                         <div className="skill">HTML</div>
                       </div>
-                      <button className="apply">Apply</button>
+                      <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
                       <button className="save">Save Job</button>
                       <a href="#"></a>
                   </article>
@@ -432,7 +476,16 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
-              <article className="job-card" style={{
+              <article 
+              onClick={()=> this.setState({ 
+                show: true, 
+                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+              })}
+                className="job-card" style={{
                 width: '100%',
                 marginBottom: '20px',
               }}>
@@ -457,7 +510,11 @@ class Home extends Component {
                     <div className="skill">Illustrator</div>
                     <div className="skill">HTML</div>
                   </div>
-                  <button className="apply">Apply</button>
+                  <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
                   <button className="save">Save Job</button>
                   <a href="#"></a>
               </article>
@@ -477,7 +534,16 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
-              <article className="job-card" style={{
+              <article 
+              onClick={()=> this.setState({ 
+                show: true, 
+                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+              })}
+                className="job-card" style={{
                 width: '100%',
                 marginBottom: '20px',
               }}>
@@ -502,7 +568,11 @@ class Home extends Component {
                     <div className="skill">Illustrator</div>
                     <div className="skill">HTML</div>
                   </div>
-                  <button className="apply">Apply</button>
+                  <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
                   <button className="save">Save Job</button>
                   <a href="#"></a>
               </article>
@@ -522,7 +592,16 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
-              <article className="job-card" style={{
+              <article 
+              onClick={()=> this.setState({ 
+                show: true, 
+                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+              })}
+                className="job-card" style={{
                 width: '100%',
                 marginBottom: '20px',
               }}>
@@ -547,7 +626,11 @@ class Home extends Component {
                     <div className="skill">Illustrator</div>
                     <div className="skill">HTML</div>
                   </div>
-                  <button className="apply">Apply</button>
+                  <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
                   <button className="save">Save Job</button>
                   <a href="#"></a>
               </article>
@@ -607,8 +690,16 @@ class Home extends Component {
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
       this.setState({ filteredSearchJobs: container.length})
       const postData = slice.map((job) => {
+       console.log('job', job)
         return (
-        <div>
+        <div onClick={()=> this.setState({ 
+          show: true, 
+          jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+          contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+          whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+          majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+          keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+        })}>
           <article className="job-card" 
             // onClick={this.handleShow()}
             onClick={this.showTheModal}
@@ -633,11 +724,15 @@ class Home extends Component {
               }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
               <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
               <div className="skills-container">
-                <div className="skill">Photoshop</div>
-                <div className="skill">Illustrator</div>
-                <div className="skill">HTML</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
               </div>
-              <button className="apply">Apply</button>
+              <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
               <button className="save">Save Job</button>
               <a href="#"></a>
           </article>
@@ -699,7 +794,16 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
-              <article className="job-card" style={{
+              <article 
+              onClick={()=> this.setState({ 
+                show: true, 
+                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+              })}
+                className="job-card" style={{
                 width: '100%',
                 marginBottom: '20px',
               }}>
@@ -724,7 +828,11 @@ class Home extends Component {
                     <div className="skill">Illustrator</div>
                     <div className="skill">HTML</div>
                   </div>
-                  <button className="apply">Apply</button>
+                  <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              } >Apply</button>
                   <button className="save">Save Job</button>
                   <a href="#"></a>
               </article>
@@ -745,6 +853,8 @@ class Home extends Component {
     console.log('offset', this.state.offset, 'perPage', this.state.perPage)
     const slice = searchedJobs.slice(this.state.offset, this.state.offset + this.state.perPage)
 
+
+    if (searchedJobs.length > 0){
     let map = {}
       for (let job of searchedJobs){
         let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
@@ -787,13 +897,19 @@ class Home extends Component {
       this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
 
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+    
 
-      // console.log('gigs', gigs)
-      // console.log('slice search', slice)
-        console.log('postData', slice)
       const postData = slice.map((job) => {
       return (
         <article 
+          onClick={()=> this.setState({ 
+            show: true, 
+            jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+            contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+            whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+            majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+            keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+          })}
           className="job-card" style={{
           width: '100%',
           marginBottom: '20px',
@@ -819,7 +935,11 @@ class Home extends Component {
               <div className="skill">Illustrator</div>
               <div className="skill">HTML</div>
             </div>
-            <button className="apply">Apply</button>
+            <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
             <button className="save">Save Job</button>
             <a href="#"></a>
         </article>
@@ -832,7 +952,7 @@ class Home extends Component {
      this.setState({ loading: false })
      return
     }
-
+  }
      //if a search was made and a city selected
      if (this.state.search.length > 0 && this.state.citySelected.length > 0){
 
@@ -880,6 +1000,14 @@ class Home extends Component {
        
       return (
         <article 
+          onClick={()=> this.setState({ 
+          show: true, 
+          jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+          contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+          whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+          majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+          keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+        })}
           className="job-card" style={{
           width: '100%',
           marginBottom: '20px',
@@ -905,7 +1033,11 @@ class Home extends Component {
               <div className="skill">Illustrator</div>
               <div className="skill">HTML</div>
             </div>
-            <button className="apply">Apply</button>
+            <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
             <button className="save">Save Job</button>
             <a href="#"></a>
         </article>
@@ -960,10 +1092,21 @@ class Home extends Component {
           }
         }
         this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
+        
+    
+        
         const postData = slice.map((job) => {
          
         return (
           <article 
+            onClick={()=> this.setState({ 
+              show: true, 
+              jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
+              contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
+              whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
+              majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
+              keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+            })}
             className="job-card" style={{
             width: '100%',
             marginBottom: '20px',
@@ -989,7 +1132,11 @@ class Home extends Component {
                 <div className="skill">Illustrator</div>
                 <div className="skill">HTML</div>
               </div>
-              <button className="apply">Apply</button>
+              <button className="apply" onClick={() => {
+                this.setState({ applyClicked: true })
+                location.href = job.MatchedObjectDescriptor.PositionURI
+              }
+              }>Apply</button>
               <button className="save">Save Job</button>
               <a href="#"></a>
           </article>
@@ -1019,10 +1166,80 @@ class Home extends Component {
     const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
     const {  onChange, showCityJobs, selectSalaryRnge, setCurrentPage } = this;
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
+    console.log('show', this.state.show)
     return (
       <div>
         <Header />
         <HeroSection />
+        {/* the offcanvas */}
+          <Offcanvas placement='bottom' show={this.state.show && !this.state.applyClicked}>
+            <Offcanvas.Header closeButton onClick={()=> this.setState({ show: false })}>
+              <Offcanvas.Title> <h2>  Job Information </h2></Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body style={{
+              marginTop: '-13px'
+            }}>
+              
+              <div>
+                <div>
+                   <h5> <strong>  Job Description:</strong></h5>
+                   <p style={{
+                    fontSize: '19px'
+                   }}>  {this.state.jobSummary.length > 0 ? this.state.jobSummary : 'No summary found.'} </p>
+               </div>
+              </div>
+              <div>
+                <div>
+                    <h5> <strong> Contact Email:</strong> </h5> 
+                    <p style={{
+                    fontSize: '19px',
+                    marginTop: '-3px'
+                   }}>
+                    {this.state.contactEmail ? this.state.contactEmail : 'No email found.'} 
+                  </p>
+                </div>
+              </div>
+              <div>
+                <div>
+                    <h5> <strong> What to expect next: </strong> </h5> 
+                    <p style={{ 
+                    fontSize: '19px',
+                   }}>{this.state.whatToExpect} </p>
+                </div>
+              </div>
+              <div>
+                <div>
+                    <h5> <strong> Major Duties: </strong> </h5> 
+                    <p style={{
+                    fontSize: '19px'
+                   }}> {this.state.majorDuties}</p>
+                </div>
+              </div>
+              <div>
+                <div>
+                    <h5> <strong> Key Requirements: </strong> </h5> 
+                    <ul> 
+                    {this.state.keyRequirements.length > 0 ? this.state.keyRequirements.map(req => {
+                      return (
+                        <li style={{
+                          fontSize: '19px'
+                        }}>
+                          {req}
+                        </li>
+                      )
+                    })
+                    :
+                    <li style={{
+                      fontSize: '19px'
+                    }}> No requirement found. </li>
+                  }
+                    </ul>
+                </div>
+              </div>
+
+            </Offcanvas.Body>
+          </Offcanvas>
+        {/* the offcanvas */}
         <div>
           <div className="container">
               <div className="container">
@@ -1031,7 +1248,7 @@ class Home extends Component {
                   }}>
                     {/* //the filters */}
                     <div className='row' style={{
-                      height: '46vh',
+                      height: '45vh',
                       flexDirection: 'column',
                       width: '400px',
                       marginRight: '20px',
@@ -1039,7 +1256,7 @@ class Home extends Component {
                         <div style={{
                           alignContent: 'flex-start',
                           display: 'flex',
-                          height: '48vh',
+                          height: '35vh',
                           flexDirection: 'column',
                           background: '#f8f9fa',
                           padding: '1.5rem 1rem',
@@ -1098,7 +1315,7 @@ class Home extends Component {
                                         display: 'flex',
                                         width: '100%',
                                         flexWrap: 'wrap',
-                                        marginLeft: '-14%'
+                                        marginLeft: '-11%'
                                       }}>
                                        {topCities.length > 0 ? 
                                        topCities.map(city => {
@@ -1130,6 +1347,7 @@ class Home extends Component {
                                           
                                         }}>
                                             <a 
+                                            
                                             onClick={() => showCityJobs(thecity)}
                                               style={{
                                               display: 'flex',
@@ -1137,7 +1355,8 @@ class Home extends Component {
                                               width: '100%',
                                               alignItems: 'center',
                                               justifyContent: 'center',
-                                              color: '#031b4e'
+                                              color: this.state.loading ? 'rgb(23, 22, 22)' : '#031b4e',
+                                              pointerEvents: this.state.loading ? 'none' : 'auto',
                                             }}>
                                               <div>
                                                 {thecity}
@@ -1190,7 +1409,7 @@ class Home extends Component {
                                         display: 'flex',
                                         width: '100%',
                                         flexWrap: 'wrap',
-                                        marginLeft: '-14%'
+                                        marginLeft: '-11%'
                                       }}>
                                        {salaryRanges.length >= 3 ? 
                                        salaryRanges.map(salaryRange => {
