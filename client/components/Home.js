@@ -4,14 +4,21 @@ import Header from './Header'
 import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
 import { RotatingLines } from 'react-loader-spinner'
+import Offcanvas from 'react-bootstrap/Offcanvas';
 import { setForcePage, updateForcedPage } from '../store'
 import {
   GiCancel
 } from 'react-icons/gi'
+
+//  const [show, setShow] = useState(false);
+
+
+//
 class Home extends Component {
   constructor(){
     super()
       this.state = {
+        show: false,
         data: [],
         offset: 0,
         perPage: 25,
@@ -33,6 +40,12 @@ class Home extends Component {
       this.showCityJobs = this.showCityJobs.bind(this)
       this.selectSalaryRnge = this.selectSalaryRnge.bind(this)
       this.setCurrentPage = this.setCurrentPage.bind(this)
+  }
+  handleClose(){
+    this.setState({ show: false })
+  }
+  handleShow(){
+    this.setState({ show: true })
   }
 
   // UNSAFE_componentWillReceiveProps(nextProps) {
@@ -56,6 +69,8 @@ class Home extends Component {
   selectSalaryRnge(range){
     console.log('clicked range', range)
     if (this.state.selectSalaryRnge !== range){
+      this.setState({ currentPage: 0 })
+      this.setState({ offset: 0 })
       this.setState({ salarySelected: range })
       this.getData(this.state.salarySelected)
     } 
@@ -65,10 +80,10 @@ class Home extends Component {
       this.getData()
     }
   }
+
   handlePageClick = (e) => {
     const selectedPage = e.selected;
     const offset = selectedPage * this.state.perPage;
-    console.log('page', selectedPage, 'off', offset)
     this.setState({
         currentPage: selectedPage,
         offset: offset
@@ -81,6 +96,8 @@ class Home extends Component {
 
   showCityJobs(city){
     if (this.state.citySelected !== city){
+    this.setState({ currentPage: 0 })
+    this.setState({ offset: 0 })
     this.setState({ citySelected: city })
     this.getData(this.state.citySelected)
     } else {
@@ -92,6 +109,7 @@ class Home extends Component {
   onChange(e){
     this.setState({ currentPage: 0 })
     this.setState({search: e.target.value })
+    this.setState({ offset: 0 })
     this.getData(this.state.search)
   }
   displayImage(name){
@@ -364,35 +382,40 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
-              <article className="job-card" style={{
-                width: '100%',
-                marginBottom: '20px',
-              }}>
-                  <div className="company-logo-img">
-                    <img 
-                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                        style={{
-                        verticalAlign: 'middle',
-                        width: '116px',
-                        height: '116px',
-                        borderRadius: '50%',
-                        }} />  
-                  </div>
-                  <div className="job-title" style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
-                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-                  <div className="skills-container">
-                    <div className="skill">Photoshop</div>
-                    <div className="skill">Illustrator</div>
-                    <div className="skill">HTML</div>
-                  </div>
-                  <button className="apply">Apply</button>
-                  <button className="save">Save Job</button>
-                  <a href="#"></a>
-              </article>
+              <div>
+                <div>
+                  <article 
+                    className="job-card" style={{
+                    width: '100%',
+                    marginBottom: '20px',
+                  }}>
+                      <div className="company-logo-img">
+                        <img 
+                            src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
+                            style={{
+                            verticalAlign: 'middle',
+                            width: '116px',
+                            height: '116px',
+                            borderRadius: '50%',
+                            }} />  
+                      </div>
+                      <div className="job-title" style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'pre'
+                      }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                      <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                      <div className="skills-container">
+                        <div className="skill">Photoshop</div>
+                        <div className="skill">Illustrator</div>
+                        <div className="skill">HTML</div>
+                      </div>
+                      <button className="apply">Apply</button>
+                      <button className="save">Save Job</button>
+                      <a href="#"></a>
+                  </article>
+              </div>
+              </div>
             )
           })
       
@@ -540,7 +563,6 @@ class Home extends Component {
           }
         }
         const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
-        console.log('offset', this.state.offset, 'state per page', this.state.perPage)
 
         //segment jobs by salary
         let salary50to100 = []
@@ -582,11 +604,15 @@ class Home extends Component {
           topCities.push([key, map[key]])
         }
       }
-      this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]) })
+      this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
       this.setState({ filteredSearchJobs: container.length})
       const postData = slice.map((job) => {
         return (
-          <article className="job-card" style={{
+        <div>
+          <article className="job-card" 
+            // onClick={this.handleShow()}
+            onClick={this.showTheModal}
+            style={{
             width: '100%',
             marginBottom: '20px',
           }}>
@@ -615,6 +641,7 @@ class Home extends Component {
               <button className="save">Save Job</button>
               <a href="#"></a>
           </article>
+          </div>
         )
       })
   
@@ -711,12 +738,13 @@ class Home extends Component {
            this.setState({ loading: false })
            return
       }
-
-    const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).slice(this.state.offset, this.state.offset + this.state.perPage)
+    //if a search was made and no city or salary selected
     this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
+
     const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
-    
-    
+    console.log('offset', this.state.offset, 'perPage', this.state.perPage)
+    const slice = searchedJobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+
     let map = {}
       for (let job of searchedJobs){
         let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
@@ -738,7 +766,7 @@ class Home extends Component {
         let salary100to150= []
         let salaryLessThan50 = []
         let salaryGreatThen150 = []
-
+        var jobs
         for (let job of searchedJobs){
           let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
           let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
@@ -758,9 +786,12 @@ class Home extends Component {
 
       this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
 
-      this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]) })
+      this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+
+      // console.log('gigs', gigs)
+      // console.log('slice search', slice)
+        console.log('postData', slice)
       const postData = slice.map((job) => {
-       
       return (
         <article 
           className="job-card" style={{
@@ -804,6 +835,7 @@ class Home extends Component {
 
      //if a search was made and a city selected
      if (this.state.search.length > 0 && this.state.citySelected.length > 0){
+
       //if a search was made and a city selected AND a salary selected
       if (this.state.salarySelected.length > 0){
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
@@ -951,7 +983,7 @@ class Home extends Component {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'pre'
               }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
-              <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+              <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName ? job.MatchedObjectDescriptor.OrganizationName : 'loading'}</div>
               <div className="skills-container">
                 <div className="skill">Photoshop</div>
                 <div className="skill">Illustrator</div>
@@ -987,7 +1019,6 @@ class Home extends Component {
     const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
     const {  onChange, showCityJobs, selectSalaryRnge, setCurrentPage } = this;
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
-    console.log(this.props.forcedPage)
     return (
       <div>
         <Header />
