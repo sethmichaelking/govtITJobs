@@ -41,7 +41,7 @@ const Navbar = ({handleClick, isLoggedIn}) => (
                     }}>Login</a>
                 </li>
                 <li className="nav-item">
-                    <a className="nav-link" href="#" style={{
+                    <a className="nav-link" href="#/signup" style={{
                       fontSize: '25px'
                     }}>Register</a>
                 </li>
