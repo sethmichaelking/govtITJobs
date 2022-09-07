@@ -1248,7 +1248,7 @@ class Home extends Component {
                   }}>
                     {/* //the filters */}
                     <div className='row' style={{
-                      height: '46vh',
+                      height: '45vh',
                       flexDirection: 'column',
                       width: '400px',
                       marginRight: '20px',
