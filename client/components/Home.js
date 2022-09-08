@@ -71,6 +71,7 @@ class Home extends Component {
     } 
     if (this.state.salarySelected === range){
       this.setState({ currentPage: 0 })
+      this.setState({ offset: 0 })
       this.setState({ salarySelected: '' })
       this.getData()
     }
@@ -186,8 +187,8 @@ class Home extends Component {
       //if no search but city selected && salary selected
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length > 0){
         console.log('city and salary')
-        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
-              
+        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
+        console.log('searched jobs', searchedJobs, 'eln', searchedJobs.length)
         let salary50to100 = []
         let salary100to150= []
         let salaryLessThan50 = []
@@ -228,7 +229,7 @@ class Home extends Component {
         
         if (searchedJobsWithSalary === undefined){
           this.setState({ loading: false })
-          this.setState({ filteredSearchJobs: 0 })
+          this.setState({ filteredSearchJobs: searchedJobs.length })
           return
         }
         const slice = searchedJobsWithSalary.slice(this.state.offset, this.state.offset + this.state.perPage)
@@ -317,7 +318,23 @@ class Home extends Component {
               salaryGreatThen150.push(job)
             }
           }
-          
+          let map = {}
+          for (let job of justCityNameNoState){
+            let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+            if (map[city] === undefined){
+                map[city] = 1
+            }
+            map[city] += 1
+          }
+          const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+          let keys = Object.keys(map)
+          let topCities = []
+          for (let key of keys){
+            if (sortedKeys.includes(map[key])){
+              topCities.push([key, map[key]])
+            }
+          }
+          this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
          this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
          this.setState({ filteredSearchJobs: searchedJobs.length })
           const postData = slice.map((job) => {
@@ -378,7 +395,9 @@ class Home extends Component {
       //if no search and no city
       if (this.state.search.length === 0 && this.state.citySelected.length === 0){
         //if no search and no city but salary selected
+        console.log('no filter selected')
         if (this.state.salarySelected.length > 0){
+          console.log('salary was selected')
           const searchedJobs = container
 
           let salary50to100 = []
@@ -754,6 +773,7 @@ class Home extends Component {
           topCities.push([key, map[key]])
         }
       }
+      console.log('top cities', topCities)
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
       this.setState({ filteredSearchJobs: container.length})
       const postData = slice.map((job) => {
@@ -1593,7 +1613,7 @@ class Home extends Component {
                                    flexWrap: 'wrap'
                                  }}>
                                    <li 
-                                   onClick={() => showCityJobs(selection)}
+                                  //  onClick={() => showCityJobs(selection)}
                                    style={{
                                      padding: '0',
                                      display: 'flex',
@@ -1672,7 +1692,7 @@ class Home extends Component {
                                   flexWrap: 'wrap'
                                 }}>
                                   <li 
-                                  onClick={() => selectSalaryRnge(selection)}
+                                  // onClick={() => selectSalaryRnge(selection)}
                                   style={{
                                     padding: '0',
                                     display: 'flex',
