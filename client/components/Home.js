@@ -378,11 +378,8 @@ class Home extends Component {
       //if no search and no city
       if (this.state.search.length === 0 && this.state.citySelected.length === 0){
         //if no search and no city but salary selected
-        console.log('no filter selected')
         if (this.state.salarySelected.length > 0){
-          console.log('salary was selected')
           const searchedJobs = container
-          console.log('searcedJobs', searchedJobs)
 
           let salary50to100 = []
           let salary100to150= []
@@ -407,6 +404,23 @@ class Home extends Component {
           var jobs 
           if (this.state.salarySelected === '100K-150K'){
           jobs = salary100to150
+          let map = {}
+          for (let job of jobs){
+            let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+            if (map[city] === undefined){
+                map[city] = 1
+            }
+            map[city] += 1
+          }
+          const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+          let keys = Object.keys(map)
+          let topCities = []
+          for (let key of keys){
+            if (sortedKeys.includes(map[key])){
+              topCities.push([key, map[key]])
+            }
+          }
+          this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
           const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
@@ -469,6 +483,24 @@ class Home extends Component {
           }
           if (this.state.salarySelected === '50-100K'){
             jobs = salary50to100
+            let map = {}
+            for (let job of jobs){
+              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              if (map[city] === undefined){
+                  map[city] = 1
+              }
+              map[city] += 1
+            }
+            const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+            let keys = Object.keys(map)
+            let topCities = []
+            for (let key of keys){
+              if (sortedKeys.includes(map[key])){
+                topCities.push([key, map[key]])
+              }
+            }
+            console.log('new top cities', topCities)
+            this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
@@ -527,6 +559,24 @@ class Home extends Component {
           }
           if (this.state.salarySelected === '<50K'){
             jobs = salaryLessThan50
+            let map = {}
+            for (let job of jobs){
+              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              if (map[city] === undefined){
+                  map[city] = 1
+              }
+              map[city] += 1
+            }
+            const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+            let keys = Object.keys(map)
+            let topCities = []
+            for (let key of keys){
+              if (sortedKeys.includes(map[key])){
+                topCities.push([key, map[key]])
+              }
+            }
+            console.log('new top cities', topCities)
+            this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
@@ -704,7 +754,6 @@ class Home extends Component {
           topCities.push([key, map[key]])
         }
       }
-      console.log('top cities', topCities)
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
       this.setState({ filteredSearchJobs: container.length})
       const postData = slice.map((job) => {
