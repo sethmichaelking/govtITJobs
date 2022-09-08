@@ -291,7 +291,7 @@ class Home extends Component {
     }
       //if no search no salary selected 
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length === 0){
-        console.log('just city selected', 'just the city')
+        console.log('just city selected')
           const justCityNameNoState = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
           console.log('just city names length', justCityNameNoState)
           const slice = justCityNameNoState.slice(this.state.offset, this.state.offset + this.state.perPage)
