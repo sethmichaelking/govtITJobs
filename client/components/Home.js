@@ -10,10 +10,7 @@ import {
   GiCancel
 } from 'react-icons/gi'
 
-//  const [show, setShow] = useState(false);
 
-
-//
 class Home extends Component {
   constructor(){
     super()
@@ -54,13 +51,6 @@ class Home extends Component {
     this.setState({ show: true })
   }
 
-  // UNSAFE_componentWillReceiveProps(nextProps) {
-  //   let pre = JSON.stringify(this.props.forcedPage)
-  //   let next = JSON.stringify(nextProps.forcedPage)
-  //   if (pre !== next) {
-  //     this.setState({currentPage: 0})
-  //   }
-  // }
   setCurrentPage(page){
     //if no search and no city and no salary, just return whichever page is selected
     if (this.state.citySelected.length === 0 && this.state.search.length === 0 && this.state.salarySelected.length === 0){
@@ -73,7 +63,6 @@ class Home extends Component {
   return page
 }
   selectSalaryRnge(range){
-    console.log('clicked range', range)
     if (this.state.selectSalaryRnge !== range){
       this.setState({ currentPage: 0 })
       this.setState({ offset: 0 })
@@ -196,6 +185,7 @@ class Home extends Component {
     if (this.state.search.length === 0 ){
       //if no search but city selected && salary selected
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length > 0){
+        console.log('city and salary')
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
               
         let salary50to100 = []
@@ -236,7 +226,8 @@ class Home extends Component {
           searchedJobsWithSalary = searchedJobs.filter(job => salary50to100.includes(job))
         }
         
-        if (searchedJobsWithSalary.length === 0){
+        if (searchedJobsWithSalary === undefined){
+          this.setState({ loading: false })
           this.setState({ filteredSearchJobs: 0 })
           return
         }
@@ -298,16 +289,19 @@ class Home extends Component {
          return
       
     }
-      //if no search no salary selected and city selected
+      //if no search no salary selected 
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length === 0){
-          const slice = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).slice(this.state.offset, this.state.offset + this.state.perPage)
-          const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
-          
+        console.log('just city selected')
+          const justCityNameNoState = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
+          console.log('just city names length', justCityNameNoState)
+          const slice = justCityNameNoState.slice(this.state.offset, this.state.offset + this.state.perPage)
+          const searchedJobs = justCityNameNoState
+          console.log('searchjobs length', searchedJobs)
           let salary50to100 = []
           let salary100to150= []
           let salaryLessThan50 = []
           let salaryGreatThen150 = []
-          for (let job of searchedJobs){
+          for (let job of justCityNameNoState){
             let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
             let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
             if (min > 50000 && max <= 100000){
@@ -384,9 +378,12 @@ class Home extends Component {
       //if no search and no city
       if (this.state.search.length === 0 && this.state.citySelected.length === 0){
         //if no search and no city but salary selected
+        console.log('no filter selected')
         if (this.state.salarySelected.length > 0){
+          console.log('salary was selected')
           const searchedJobs = container
-          
+          console.log('searcedJobs', searchedJobs)
+
           let salary50to100 = []
           let salary100to150= []
           let salaryLessThan50 = []
@@ -588,9 +585,28 @@ class Home extends Component {
           }
           if (this.state.salarySelected === '150K>'){
             jobs = salaryGreatThen150
+            console.log('selected jobs', jobs)
+            let map = {}
+            for (let job of jobs){
+              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              if (map[city] === undefined){
+                  map[city] = 1
+              }
+              map[city] += 1
+            }
+            const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+            let keys = Object.keys(map)
+            let topCities = []
+            for (let key of keys){
+              if (sortedKeys.includes(map[key])){
+                topCities.push([key, map[key]])
+              }
+            }
+            console.log('new top cities', topCities)
+            this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
-          this.setState({ filteredSearchJobs: jobs.length })
-          const postData = slice.map((job) => {
+            this.setState({ filteredSearchJobs: jobs.length })
+            const postData = slice.map((job) => {
             return (
               <article 
               onClick={()=> this.setState({ 
@@ -645,6 +661,7 @@ class Home extends Component {
            return
           }
         }
+        console.log('no filters selected')
         const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
 
         //segment jobs by salary
@@ -687,10 +704,10 @@ class Home extends Component {
           topCities.push([key, map[key]])
         }
       }
+      console.log('top cities', topCities)
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
       this.setState({ filteredSearchJobs: container.length})
       const postData = slice.map((job) => {
-       console.log('job', job)
         return (
         <div onClick={()=> this.setState({ 
           show: true, 
@@ -789,8 +806,8 @@ class Home extends Component {
           if (this.state.salarySelected === '150K>'){
             jobs = salaryGreatThen150
           }
+          
           const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
-          console.log('offset', this.state.offset, 'state per page', this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
@@ -850,7 +867,6 @@ class Home extends Component {
     this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
 
     const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
-    console.log('offset', this.state.offset, 'perPage', this.state.perPage)
     const slice = searchedJobs.slice(this.state.offset, this.state.offset + this.state.perPage)
 
 
@@ -955,9 +971,10 @@ class Home extends Component {
   }
      //if a search was made and a city selected
      if (this.state.search.length > 0 && this.state.citySelected.length > 0){
-
+      console.log('search & city ')
       //if a search was made and a city selected AND a salary selected
       if (this.state.salarySelected.length > 0){
+        console.log('search & city & salary')
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
         let salary50to100 = []
         let salary100to150= []
@@ -1166,7 +1183,6 @@ class Home extends Component {
     const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
     const {  onChange, showCityJobs, selectSalaryRnge, setCurrentPage } = this;
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
-    console.log('show', this.state.show)
     return (
       <div>
         <Header />
