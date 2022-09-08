@@ -25,7 +25,7 @@ export default class Header extends Component {
                     marginTop: '47px',
                     width: '600px',
                     height: '80px',
-                    margin: '46px auto -20px auto',
+                    margin: '9px auto -20px auto',
                     padding: '20px 0'
                 }}>
                     <div style={{
@@ -33,9 +33,9 @@ export default class Header extends Component {
                     }}>
                         <h1 style={{
                             color: '#4d5154',
-                            fontSize: '5.0rem'
+                            fontSize: '3.7rem'
                         }}>
-                            U.S. IT Jobs 🇺🇸
+                            U.S.    <Typewriter options={{strings: ['Software', 'IT', 'Systems', 'Developer'],autoStart: true,loop: true, }}/> Jobs 🇺🇸
                         </h1> 
                     </div>
                     <div style={{
@@ -45,7 +45,7 @@ export default class Header extends Component {
                         fontWeight: '100'
                     }}>
                         <p style={{
-                            fontSize: '1.8rem',
+                            fontSize: '1.4rem',
                             lineHeight: '1.4em',
                             color: '#4d5154',
                             fontFamily: "Neufile Grotesk Light"
@@ -94,16 +94,6 @@ export default class Header extends Component {
                                 src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Seal_of_the_United_States_Department_of_Health_and_Human_Services.svg/2048px-Seal_of_the_United_States_Department_of_Health_and_Human_Services.svg.png' />
                             </div>
                         </div>
-                        {/* <HeroSection /> */}
-                        {/* fit the typewriter inside the input */}
-                        {/* <input type="text" id="example" /> */}
-                        {/* <Typewriter
-                                options={{
-                                    strings: ['Hello', 'World'],
-                                    autoStart: true,
-                                    loop: true,
-                                  }}
-                            /> */}
                     </div>
                 </div>
             </div>
