@@ -1868,21 +1868,33 @@ class Home extends Component {
                         {this.state.filteredSearchJobs} open jobs・Updated  {date}
                       </div>
                       {this.state.loading ? 
+                      <div>
                       <div style={{
                         margin: '50px auto',
-                        display: 'flex',
                         listStyle: 'none',
                         outline: 'none',
+                        textAlign: 'center',
+                        display: 'flex',
                         justifyContent: 'center'
                       }}>
-                        <RotatingLines
-                        strokeColor="black"
-                        strokeWidth="5"
-                        animationDuration="0.75"
-                        width="150"
-                        visible={true}
-                      /> 
-                    </div>
+                          <RotatingLines
+                          strokeColor="black"
+                          strokeWidth="5"
+                          animationDuration="0.75"
+                          width="150"
+                          visible={true}
+                        /> 
+                      </div>
+                        <p style={{
+                          margin: '50px auto',
+                          listStyle: 'none',
+                          outline: 'none',
+                          textAlign: 'center',
+                          display: 'flex',
+                          justifyContent: 'center',
+                          fontWeight: '600'
+                        }}> Pulling data from the USA API. <br />This could take up to 15 seconds. </p>
+                      </div>
                     : this.state.postData}
                     {
                       this.state.loading ? '' :

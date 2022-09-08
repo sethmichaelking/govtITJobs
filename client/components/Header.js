@@ -53,14 +53,46 @@ export default class Header extends Component {
                             The federal government offers <strong> unique hiring paths </strong> to help hire individuals that <strong>represent our diverse society.</strong> Learn more about each hiring path and your eligibility.
                         </p>
                         <div style={{
-                            border: '2px solid red',
                             paddingBottom: '20px',
                             marginTop: '40px',
                             width: '696px',
                             margin: '0 auto',
                             fontSize: '1.2rem',
-                            height: '93px'
+                            height: '93px',
+                            marginLeft: '-42px'
                         }}>
+                            <div>
+                                <img 
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    height: '100px'
+                                }}
+                                src='https://upload.wikimedia.org/wikipedia/commons/thumb/c/cb/Seal_of_the_United_States_Department_of_the_Treasury.svg/2048px-Seal_of_the_United_States_Department_of_the_Treasury.svg.png' />
+                                <img 
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    height: '100px'
+                                }}
+                                src='https://upload.wikimedia.org/wikipedia/commons/0/05/Seal_of_the_U.S._Department_of_Veterans_Affairs.svg' />
+                                <img 
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    height: '100px'
+                                }}
+                                src='https://upload.wikimedia.org/wikipedia/commons/d/d1/Seal_of_the_U.S._Department_of_the_Air_Force.png' />
+                                <img 
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    height: '100px'
+                                }}
+                                src='https://upload.wikimedia.org/wikipedia/commons/e/e0/United_States_Department_of_Defense_Seal.svg' />
+                                <img 
+                                style={{
+                                    backgroundColor: 'transparent',
+                                    height: '100px'
+                                }}
+                                src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Seal_of_the_United_States_Department_of_Health_and_Human_Services.svg/2048px-Seal_of_the_United_States_Department_of_Health_and_Human_Services.svg.png' />
+                            </div>
                         </div>
                         {/* <HeroSection /> */}
                         {/* fit the typewriter inside the input */}
