@@ -5,16 +5,21 @@ import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
 import { RotatingLines } from 'react-loader-spinner'
 import Offcanvas from 'react-bootstrap/Offcanvas';
+import Button from 'react-bootstrap/Button';
+
 import { setForcePage, updateForcedPage } from '../store'
 import {
   GiCancel
 } from 'react-icons/gi'
-
+import {
+  FaRegSadCry
+} from 'react-icons/fa'
 
 class Home extends Component {
   constructor(){
     super()
       this.state = {
+        NothingFound: false,
         show: false,
         data: [],
         offset: 0,
@@ -63,6 +68,7 @@ class Home extends Component {
   return page
 }
   selectSalaryRnge(range){
+    console.log('slected range', range)
     if (this.state.selectSalaryRnge !== range){
       this.setState({ currentPage: 0 })
       this.setState({ offset: 0 })
@@ -187,8 +193,8 @@ class Home extends Component {
       //if no search but city selected && salary selected
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length > 0){
         console.log('city and salary')
+        {console.log(this.state.salarySelected, 'salary selected')}
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
-        console.log('searched jobs', searchedJobs, 'eln', searchedJobs.length)
         let salary50to100 = []
         let salary100to150= []
         let salaryLessThan50 = []
@@ -210,14 +216,14 @@ class Home extends Component {
           }
         }
         //shows amount next to salary range 
-        this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
+        this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100K-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
 
         var searchedJobsWithSalary
 
         if (this.state.salarySelected === '<50K'){
           searchedJobsWithSalary = searchedJobs.filter(job => salaryLessThan50.includes(job))
         }
-        if (this.state.salarySelected === '100-150K'){
+        if (this.state.salarySelected === '100K-150K'){
           searchedJobsWithSalary = searchedJobs.filter(job => salary100to150.includes(job))
         }
         if (this.state.salarySelected === '150K+'){
@@ -228,6 +234,27 @@ class Home extends Component {
         }
         
         if (searchedJobsWithSalary === undefined){
+          const postData = <div style={{
+            margin: '78px auto',
+            display: 'flex',
+            listStyle: 'none',
+            outline: 'none',
+            justifyContent: 'center'
+          }}> 
+           <div>
+            <div><FaRegSadCry size={150}/> </div>
+            <p style={{
+                  marginLeft: '-21px',
+                  marginTop: '10px'
+            }}> No jobs founds. Search again. </p>
+            <Button style={{ marginLeft: '21px' }}variant="primary" onClick={()=> window.location.reload()}>Reset Filters</Button>
+            </div>
+          </div>
+          this.setState({
+            NothingFound: true,
+            pageCount: 0,      
+            postData
+           })
           this.setState({ loading: false })
           this.setState({ filteredSearchJobs: searchedJobs.length })
           return
@@ -294,10 +321,8 @@ class Home extends Component {
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length === 0){
         console.log('just city selected')
           const justCityNameNoState = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
-          console.log('just city names length', justCityNameNoState)
           const slice = justCityNameNoState.slice(this.state.offset, this.state.offset + this.state.perPage)
           const searchedJobs = justCityNameNoState
-          console.log('searchjobs length', searchedJobs)
           let salary50to100 = []
           let salary100to150= []
           let salaryLessThan50 = []
@@ -335,7 +360,7 @@ class Home extends Component {
             }
           }
           this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
-         this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
+         this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100K-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
          this.setState({ filteredSearchJobs: searchedJobs.length })
           const postData = slice.map((job) => {
             return (
@@ -518,7 +543,6 @@ class Home extends Component {
                 topCities.push([key, map[key]])
               }
             }
-            console.log('new top cities', topCities)
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
@@ -597,8 +621,8 @@ class Home extends Component {
             console.log('new top cities', topCities)
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
-          this.setState({ filteredSearchJobs: jobs.length })
-          const postData = slice.map((job) => {
+            this.setState({ filteredSearchJobs: jobs.length })
+            const postData = slice.map((job) => {
             return (
               <article 
               onClick={()=> this.setState({ 
@@ -652,9 +676,8 @@ class Home extends Component {
            this.setState({ loading: false })
            return
           }
-          if (this.state.salarySelected === '150K>'){
+          if (this.state.salarySelected === '150K+'){
             jobs = salaryGreatThen150
-            console.log('selected jobs', jobs)
             let map = {}
             for (let job of jobs){
               let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
@@ -755,7 +778,7 @@ class Home extends Component {
           }
         }
 
-      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
+      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
       //top cities 
       let map = {}
       for (let job of container){
@@ -773,7 +796,6 @@ class Home extends Component {
           topCities.push([key, map[key]])
         }
       }
-      console.log('top cities', topCities)
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
       this.setState({ filteredSearchJobs: container.length})
       const postData = slice.map((job) => {
@@ -872,7 +894,7 @@ class Home extends Component {
           if (this.state.salarySelected === '<50K'){
             jobs = salaryLessThan50
           }
-          if (this.state.salarySelected === '150K>'){
+          if (this.state.salarySelected === '150K+'){
             jobs = salaryGreatThen150
           }
           
@@ -936,6 +958,32 @@ class Home extends Component {
     this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
 
     const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
+    if (searchedJobs === undefined || searchedJobs.length === 0){
+      const postData = <div style={{
+        margin: '78px auto',
+        display: 'flex',
+        listStyle: 'none',
+        outline: 'none',
+        justifyContent: 'center'
+      }}> 
+       <div>
+        <div><FaRegSadCry size={150}/> </div>
+        <p style={{
+              marginLeft: '-21px',
+              marginTop: '10px'
+        }}> No jobs founds. Search again. </p>
+        <Button style={{ marginLeft: '21px' }}variant="primary" onClick={()=> window.location.reload()}>Reset Filters</Button>
+        </div>
+      </div>
+      this.setState({
+        NothingFound: true,
+        pageCount: 0,      
+        postData
+       })
+       this.setState({ loading: false })
+       return
+      }
+    
     const slice = searchedJobs.slice(this.state.offset, this.state.offset + this.state.perPage)
 
 
@@ -979,7 +1027,7 @@ class Home extends Component {
           }
         }
 
-      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
+      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
 
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
     
@@ -1045,6 +1093,8 @@ class Home extends Component {
       if (this.state.salarySelected.length > 0){
         console.log('search & city & salary')
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
+     
+        
         let salary50to100 = []
         let salary100to150= []
         let salaryLessThan50 = []
@@ -1076,12 +1126,41 @@ class Home extends Component {
           if (this.state.salarySelected === '<50K'){
             jobs = salaryLessThan50
           }
-          if (this.state.salarySelected === '150K>'){
+          if (this.state.salarySelected === '150K+'){
             jobs = salaryGreatThen150
           }
       const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+      if (slice.length === 0){
+        console.log('nothing to display')
+            const postData = <div style={{
+              margin: '78px auto',
+              display: 'flex',
+              listStyle: 'none',
+              outline: 'none',
+              justifyContent: 'center'
+            }}> 
+             <div>
+              <div><FaRegSadCry size={150}/> </div>
+              <p style={{
+                    marginLeft: '-21px',
+                    marginTop: '10px'
+              }}> No jobs founds. Search again. </p>
+              <Button style={{ marginLeft: '21px' }}variant="primary" onClick={()=> window.location.reload()}>Reset Filters</Button>
+              </div>
+            </div>
+            this.setState({
+              filteredSearchJobs: 0, 
+              NothingFound: true,
+              pageCount: 0,      
+              postData
+             })
+             this.setState({ salaryRanges: [['50-100K', 0], ['100K-150K', 0], ['<50K', 0], ['150K+', 0]] })
+             this.setState({ loading: false })
+             return
+      }
       this.setState({ filteredSearchJobs: jobs.length })
-      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
+      this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
+      
       const postData = slice.map((job) => {
        
       return (
@@ -1137,9 +1216,14 @@ class Home extends Component {
      return
     }
       //if a search was made and city seleted (no salary selected)
-      const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).slice(this.state.offset, this.state.offset + this.state.perPage)
-      this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).length })
-      const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
+      const justCityNameNoState = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
+      // const slice = justCityNameNoState.slice(this.state.offset, this.state.offset + this.state.perPage)
+      // const searchedJobs = justCityNameNoState
+
+
+      const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).slice(this.state.offset, this.state.offset + this.state.perPage)
+      this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).length })
+      const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job))
       let map = {}
         for (let job of searchedJobs){
           let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
@@ -1177,7 +1261,7 @@ class Home extends Component {
             salaryGreatThen150.push(job)
           }
         }
-        this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K>', [salaryGreatThen150.length]]] })
+        this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
         
     
         
@@ -1341,7 +1425,7 @@ class Home extends Component {
                         <div style={{
                           alignContent: 'flex-start',
                           display: 'flex',
-                          height: '35vh',
+                          height: '44vh',
                           flexDirection: 'column',
                           background: '#f8f9fa',
                           padding: '1.5rem 1rem',
@@ -1364,6 +1448,7 @@ class Home extends Component {
                                       textTransform: 'uppercase'
                                     }}> Filters</p>
                                     <input 
+                                    
                                       style={{
                                         appearance: 'none',
                                         padding: '0.3rem 1.7rem',
@@ -1527,7 +1612,7 @@ class Home extends Component {
                                               WebkitTouchCallout: 'none'
                                         }}>
                                             <a 
-                                              onClick={() => numOfJobs > 0 ? selectSalaryRnge(range) : null}
+                                              onClick={this.state.loading ? null : () => selectSalaryRnge(range)}
                                               style={{
                                               display: 'flex',
                                               height: '100%',
@@ -1541,7 +1626,7 @@ class Home extends Component {
                                               </div>
                                               <span style={{
                                                 marginLeft: '7px'
-                                              }} className="badge badge-secondary">{numOfJobs}</span>
+                                              }} className="badge badge-secondary">{this.state.loading ? '?' : numOfJobs}</span>
                                             </a>
                                         </li>
                                         )
@@ -1715,6 +1800,7 @@ class Home extends Component {
                                         <span style={{
                                           whiteSpace: 'nowrap'
                                         }}>
+                                          {console.log(this.state.salarySelected, 'salary selected')}
                                           Salary Range: {this.state.salarySelected}
                                         </span>
                                         <span style={{
