@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Navbar from './Navbar'
 import Typewriter from 'typewriter-effect';
-
+import HeroSection from './HeroSection';
 export default class Header extends Component {
   
   render() {
@@ -9,6 +9,7 @@ export default class Header extends Component {
       <div>
         <Navbar/>
         <div style={{
+            marginBottom: '55px',
             border: '2px solid dde0f4',
             backgroundSize: 'cover',
             backgroundPosition: 'bottom',
@@ -19,19 +20,24 @@ export default class Header extends Component {
             height: '530px',
             backgroundImage: "url(" + "https://weworkremotely.com/assets/we-work-remotely@3x-c754140b276c02588dd4a43b70212d3668a75a54970c4baac325aeb60cb92f66.svg" + ")",
         }}>
-            <div>
+              <div>
                 <div style={{
+                    marginTop: '47px',
                     width: '600px',
                     height: '80px',
-                    margin: '120px auto -20px auto',
+                    margin: '46px auto -20px auto',
                     padding: '20px 0'
                 }}>
-                    <h1 style={{
-                        color: '#4d5154',
-                        fontSize: '5.5rem'
+                    <div style={{
+                        textAlign: 'center',
                     }}>
-                        US GOV JOBS
-                    </h1>
+                        <h1 style={{
+                            color: '#4d5154',
+                            fontSize: '5.0rem'
+                        }}>
+                            U.S. IT Jobs 🇺🇸
+                        </h1> 
+                    </div>
                     <div style={{
                         maxWidth: '790px',
                         textAlign: 'center',
@@ -46,6 +52,17 @@ export default class Header extends Component {
                         }}> 
                             The federal government offers <strong> unique hiring paths </strong> to help hire individuals that <strong>represent our diverse society.</strong> Learn more about each hiring path and your eligibility.
                         </p>
+                        <div style={{
+                            border: '2px solid red',
+                            paddingBottom: '20px',
+                            marginTop: '40px',
+                            width: '696px',
+                            margin: '0 auto',
+                            fontSize: '1.2rem',
+                            height: '93px'
+                        }}>
+                        </div>
+                        {/* <HeroSection /> */}
                         {/* fit the typewriter inside the input */}
                         {/* <input type="text" id="example" /> */}
                         {/* <Typewriter
@@ -55,12 +72,11 @@ export default class Header extends Component {
                                     loop: true,
                                   }}
                             /> */}
-                            
                     </div>
                 </div>
             </div>
+            </div>
         </div>
-      </div>
     )
   }
 }

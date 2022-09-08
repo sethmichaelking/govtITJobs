@@ -104,6 +104,7 @@ class Home extends Component {
     this.getData(this.state.citySelected)
     } else {
       this.setState({ currentPage: 0 })
+      this.setState({ offset: 0 })
       this.setState({ citySelected: '' })
       this.getData()
     }
@@ -233,8 +234,9 @@ class Home extends Component {
           searchedJobsWithSalary = searchedJobs.filter(job => salary50to100.includes(job))
         }
         
-        if (searchedJobsWithSalary === undefined){
+        if (searchedJobsWithSalary === undefined || searchedJobsWithSalary.length === 0){
           const postData = <div style={{
+            marginLeft: '37px',
             margin: '78px auto',
             display: 'flex',
             listStyle: 'none',
@@ -294,9 +296,9 @@ class Home extends Component {
                 }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
                 <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                 <div className="skills-container">
-                  <div className="skill">Photoshop</div>
-                  <div className="skill">Illustrator</div>
-                  <div className="skill">HTML</div>
+                  <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                  <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                  <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                 </div>
                 <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -394,9 +396,9 @@ class Home extends Component {
                   }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
-                    <div className="skill">Photoshop</div>
-                    <div className="skill">Illustrator</div>
-                    <div className="skill">HTML</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
                   <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -501,9 +503,9 @@ class Home extends Component {
                       }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
                       <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                       <div className="skills-container">
-                        <div className="skill">Photoshop</div>
-                        <div className="skill">Illustrator</div>
-                        <div className="skill">HTML</div>
+                        <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                        <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                        <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                       </div>
                       <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -578,9 +580,9 @@ class Home extends Component {
                   }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
-                    <div className="skill">Photoshop</div>
-                    <div className="skill">Illustrator</div>
-                    <div className="skill">HTML</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
                   <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -654,9 +656,9 @@ class Home extends Component {
                   }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
-                    <div className="skill">Photoshop</div>
-                    <div className="skill">Illustrator</div>
-                    <div className="skill">HTML</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div> 
                   </div>
                   <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -730,9 +732,9 @@ class Home extends Component {
                   }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
-                    <div className="skill">Photoshop</div>
-                    <div className="skill">Illustrator</div>
-                    <div className="skill">HTML</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
                   <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -862,6 +864,7 @@ class Home extends Component {
     if (this.state.search.length > 0 && this.state.citySelected.length === 0){
       //if search was made and no city selected BUT salary selected
       if (this.state.salarySelected.length > 0){
+        console.log('search and salary')
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
           
           let salary50to100 = []
@@ -884,6 +887,28 @@ class Home extends Component {
               salaryGreatThen150.push(job)
             }
           }
+
+          //find top cities
+          let map = {}
+          for (let job of searchedJobs){
+            let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+            if (map[city] === undefined){
+                map[city] = 1
+            }
+            map[city] += 1
+          }
+          const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+          let keys = Object.keys(map)
+          let topCities = []
+          for (let key of keys){
+            if (sortedKeys.includes(map[key])){
+              topCities.push([key, map[key]])
+            }
+          }
+          this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+          ///
+
+
           var jobs 
           if (this.state.salarySelected === '100K-150K'){
             jobs = salary100to150
@@ -899,6 +924,8 @@ class Home extends Component {
           }
           
           const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+          this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
+
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
@@ -932,9 +959,9 @@ class Home extends Component {
                   }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
-                    <div className="skill">Photoshop</div>
-                    <div className="skill">Illustrator</div>
-                    <div className="skill">HTML</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
                   <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -960,6 +987,7 @@ class Home extends Component {
     const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
     if (searchedJobs === undefined || searchedJobs.length === 0){
       const postData = <div style={{
+        marginLeft: '37px',
         margin: '78px auto',
         display: 'flex',
         listStyle: 'none',
@@ -1064,9 +1092,9 @@ class Home extends Component {
             }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
             <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
             <div className="skills-container">
-              <div className="skill">Photoshop</div>
-              <div className="skill">Illustrator</div>
-              <div className="skill">HTML</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
             </div>
             <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -1133,6 +1161,7 @@ class Home extends Component {
       if (slice.length === 0){
         console.log('nothing to display')
             const postData = <div style={{
+              marginLeft: '37px',
               margin: '78px auto',
               display: 'flex',
               listStyle: 'none',
@@ -1194,9 +1223,9 @@ class Home extends Component {
             }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
             <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
             <div className="skills-container">
-              <div className="skill">Photoshop</div>
-              <div className="skill">Illustrator</div>
-              <div className="skill">HTML</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
             </div>
             <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -1222,8 +1251,9 @@ class Home extends Component {
 
 
       const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).slice(this.state.offset, this.state.offset + this.state.perPage)
-      this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).length })
       const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job))
+      console.log('searchedJobs', searchedJobs.length)
+      this.setState({ filteredSearchJobs: searchedJobs.length })
       let map = {}
         for (let job of searchedJobs){
           let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
@@ -1244,7 +1274,10 @@ class Home extends Component {
         let salary100to150= []
         let salaryLessThan50 = []
         let salaryGreatThen150 = []
+        //
+        this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
 
+        //
         for (let job of searchedJobs){
           let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
           let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
@@ -1298,9 +1331,9 @@ class Home extends Component {
               }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
               <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName ? job.MatchedObjectDescriptor.OrganizationName : 'loading'}</div>
               <div className="skills-container">
-                <div className="skill">Photoshop</div>
-                <div className="skill">Illustrator</div>
-                <div className="skill">HTML</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
+                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
+                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
               </div>
               <button className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
@@ -1337,9 +1370,13 @@ class Home extends Component {
     const {  onChange, showCityJobs, selectSalaryRnge, setCurrentPage } = this;
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
     return (
-      <div>
-        <Header />
-        <HeroSection />
+      <div style={{
+        overflowX: 'clip'
+      }}>
+        <Header style={{
+        marginBottom: '45px'
+        }}/>
+        {/* <HeroSection /> */}
         {/* the offcanvas */}
           <Offcanvas placement='bottom' show={this.state.show && !this.state.applyClicked}>
             <Offcanvas.Header closeButton onClick={()=> this.setState({ show: false })}>
@@ -1417,7 +1454,7 @@ class Home extends Component {
                   }}>
                     {/* //the filters */}
                     <div className='row' style={{
-                      height: '45vh',
+                      height: '48vh',
                       flexDirection: 'column',
                       width: '400px',
                       marginRight: '20px',
@@ -1425,7 +1462,7 @@ class Home extends Component {
                         <div style={{
                           alignContent: 'flex-start',
                           display: 'flex',
-                          height: '44vh',
+                          height: '48vh',
                           flexDirection: 'column',
                           background: '#f8f9fa',
                           padding: '1.5rem 1rem',
@@ -1659,14 +1696,95 @@ class Home extends Component {
                       <div style={{
                         display: 'flex'
                       }}>
+                        {
+                      this.state.salarySelected.length > 0 ?
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-start',
+                        background: '#fff',
+                        boxSizing: 'border-box',
+                        margin: '0px auto 1rem 5%',
+                        width: '200px',
+                        position: 'relative',
+                        zIndex: '1',
+                        marginBottom: '1rem',
+                        marginLeft: 'auto',
+                        marginRight: 'auto',
+                        flexWrap: 'wrap',
+                        marginLeft: '-1%'
+                      }}>
+                          {/* <ul style={{
+                              display: 'flex',
+                              justifyContent: 'flex-start',
+                              background: '#fff',
+                              boxSizing: 'border-box',
+                              margin: '0',
+                              width: '720px',
+                              position: 'relative',
+                              zIndex: '1',
+                              marginBottom: '1rem',
+                              marginLeft: 'auto',
+                              marginRight: 'auto',
+                              flexWrap: 'wrap',    
+                          }}> */}
+                            <div style={{
+                              listStyle: 'none',
+                              marginLeft: '2%'
+                            }}>
+                                <div style={{
+                                  display: 'flex',
+                                  flexWrap: 'wrap'
+                                }}>
+                                  <div 
+                                  // onClick={() => selectSalaryRnge(selection)}
+                                  style={{
+                                    padding: '0',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    background: 'rgba(0,0,0,0)',
+                                    
+                                  }}>
+                                      <a style={{
+                                        marginLeft: '5px',
+                                        background: '#fff',
+                                        color: '#055eff',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        border: '1px solid #055eff',
+                                        padding: '0 8px',
+                                        lineHeight: '32px',
+                                        borderRadius: '4px',
+                                      }}>
+                                        <span style={{
+                                          whiteSpace: 'nowrap'
+                                        }}>
+                                          Salary Range: {this.state.salarySelected}
+                                        </span>
+                                        <span style={{
+                                         marginLeft: '7px',
+                                         marginBottom: '2px'
+                                        }}>
+                                           <GiCancel />
+                                        </span>
+                                      </a>
+                                  </div>
+                                </div>
+                            </div>
+                          {/* </ul> */}
+                      </div>
+                      :
+                      null
+                    }
                       {this.state.citySelected.length > 0 ? 
                           <div style={{
                          display: 'flex',
                          justifyContent: 'flex-start',
                          background: '#fff',
                          boxSizing: 'border-box',
-                         margin: '0',
-                         width: '720px',
+                         margin: '0px auto 1rem -1%',
+                         width: '250px',
                          position: 'relative',
                          zIndex: '1',
                          marginBottom: '1rem',
@@ -1675,7 +1793,7 @@ class Home extends Component {
                          flexWrap: 'wrap',
                          marginLeft: '-1%'
                        }}>
-                           <ul style={{
+                           {/* <ul style={{
                                display: 'flex',
                                justifyContent: 'flex-start',
                                background: '#fff',
@@ -1688,16 +1806,17 @@ class Home extends Component {
                                marginLeft: 'auto',
                                marginRight: 'auto',
                                flexWrap: 'wrap',    
-                           }}>
-                             <li style={{
+                           }}> */}
+                             <div style={{
                                listStyle: 'none',
-                               marginLeft: '-11%'
+                               marginLeft: '-21%'
                              }}>
-                                 <ul style={{
+                                 <div style={{
                                    display: 'flex',
-                                   flexWrap: 'wrap'
+                                   flexWrap: 'wrap',
+                                   marginLeft: '42px'
                                  }}>
-                                   <li 
+                                   <div
                                   //  onClick={() => showCityJobs(selection)}
                                    style={{
                                      padding: '0',
@@ -1707,6 +1826,7 @@ class Home extends Component {
                                      
                                    }}>
                                        <a style={{
+                                        marginLeft: '22px',
                                          background: '#fff',
                                          color: '#055eff',
                                          fontSize: '16px',
@@ -1730,94 +1850,13 @@ class Home extends Component {
                                             <GiCancel />
                                          </span>
                                        </a>
-                                   </li>
-                                 </ul>
-                             </li>
-                           </ul>
+                                   </div>
+                                 </div>
+                             </div>
+                           {/* </ul> */}
                        </div>
                         : null
                     } 
-                    {
-                      this.state.salarySelected.length > 0 ?
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'flex-start',
-                        background: '#fff',
-                        boxSizing: 'border-box',
-                        margin: '0',
-                        width: '720px',
-                        position: 'relative',
-                        zIndex: '1',
-                        marginBottom: '1rem',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        flexWrap: 'wrap',
-                        marginLeft: '-1%'
-                      }}>
-                          <ul style={{
-                              display: 'flex',
-                              justifyContent: 'flex-start',
-                              background: '#fff',
-                              boxSizing: 'border-box',
-                              margin: '0',
-                              width: '720px',
-                              position: 'relative',
-                              zIndex: '1',
-                              marginBottom: '1rem',
-                              marginLeft: 'auto',
-                              marginRight: 'auto',
-                              flexWrap: 'wrap',    
-                          }}>
-                            <li style={{
-                              listStyle: 'none',
-                              marginLeft: '-11%'
-                            }}>
-                                <ul style={{
-                                  display: 'flex',
-                                  flexWrap: 'wrap'
-                                }}>
-                                  <li 
-                                  // onClick={() => selectSalaryRnge(selection)}
-                                  style={{
-                                    padding: '0',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    background: 'rgba(0,0,0,0)',
-                                    
-                                  }}>
-                                      <a style={{
-                                        background: '#fff',
-                                        color: '#055eff',
-                                        fontSize: '16px',
-                                        fontWeight: '600',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        border: '1px solid #055eff',
-                                        padding: '0 8px',
-                                        lineHeight: '32px',
-                                        borderRadius: '4px',
-                                      }}>
-                                        <span style={{
-                                          whiteSpace: 'nowrap'
-                                        }}>
-                                          {console.log(this.state.salarySelected, 'salary selected')}
-                                          Salary Range: {this.state.salarySelected}
-                                        </span>
-                                        <span style={{
-                                         marginLeft: '7px',
-                                         marginBottom: '2px'
-                                        }}>
-                                           <GiCancel />
-                                        </span>
-                                      </a>
-                                  </li>
-                                </ul>
-                            </li>
-                          </ul>
-                      </div>
-                      :
-                      null
-                    }
                     </div>
                       <div style={{
                           marginLeft: 'auto',
