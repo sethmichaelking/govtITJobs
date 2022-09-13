@@ -1,13 +1,19 @@
 import {connect} from 'react-redux'
 import React, { Component } from 'react'
 import Header from './Header'
+import moment from 'moment'
 import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
 import { RotatingLines } from 'react-loader-spinner'
 import Offcanvas from 'react-bootstrap/Offcanvas';
 import Button from 'react-bootstrap/Button';
-
+import { saveJobs } from '../store'
 import { setForcePage, updateForcedPage } from '../store'
+import Badge from 'react-bootstrap/Badge';
+
+import {
+  FcCheckmark
+} from 'react-icons/fc'
 import {
   GiCancel
 } from 'react-icons/gi'
@@ -39,7 +45,14 @@ class Home extends Component {
         whatToExpect: '',
         majorDuties: '',
         keyRequirements: [],
-        applyClicked: false
+        applyClicked: false,
+        departmentName: '',
+        OrganizationName: '',
+        drugTest: '',
+        remote: '',
+        highGrade: '',
+        jobTitle: '',
+        positionURI: ''
       }
       this.getData = this.getData.bind(this)
       this.displayImage = this.displayImage.bind(this)
@@ -48,12 +61,54 @@ class Home extends Component {
       this.showCityJobs = this.showCityJobs.bind(this)
       this.selectSalaryRnge = this.selectSalaryRnge.bind(this)
       this.setCurrentPage = this.setCurrentPage.bind(this)
+      this.handleSave = this.handleSave.bind(this)
+      this.isJobExpiringSoon = this.isJobExpiringSoon.bind(this)
   }
+  isJobExpiringSoon(jobDate, startDate){
+    const expDate = moment(jobDate).format(`llll`)
+    const publicationDate = moment(startDate).format(`llll`)
+    const today = moment(new Date()).format(`llll`)
+
+    const msBetweenDates = Math.abs(new Date(expDate).getTime() - new Date(today).getTime());
+    const daysBetweenDates = msBetweenDates / (24 * 60 * 60 * 1000);
+
+    const msBetweenPubDates = Math.abs(new Date(publicationDate).getTime() - new Date(today).getTime());
+    const daysBetweenPubDates = msBetweenPubDates / (24 * 60 * 60 * 1000);
+
+
+    if (daysBetweenPubDates < 5) {
+      console.log('added within last 5 days')
+      return (
+        <Badge bg="success"> Added {Math.floor(parseInt(daysBetweenDates.toString().slice(0, 3)))} days ago</Badge>
+      )
+    } 
+    if (daysBetweenDates < 30) {
+      return (
+        <Badge bg="danger">Closes in {Math.floor(parseInt(daysBetweenDates.toString().slice(0, 3)))} days</Badge>
+      )
+    } 
+
+  }
+
   handleClose(){
     this.setState({ show: false })
   }
   handleShow(){
     this.setState({ show: true })
+  }
+  handleSave(obj){
+    obj.e.stopPropagation()
+    const job = {
+      DepartmentName: obj.deptName,
+      JobTitle: obj.title,
+      OrganizationName: obj.orgName,
+      DrugTestRequired: obj.drugTest,
+      TeleworkEligible: obj.remote,
+      PositionURI: obj.url,
+      jobSummary: obj.summary,
+      userId: this.props.auth.id * 1
+    }
+    this.props.saveJob(job)
   }
 
   setCurrentPage(page){
@@ -305,7 +360,24 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                <button className="save">Save Job</button>
+              <button 
+                disabled={this.props.auth.id === undefined ? true : false}
+                className="save" 
+                onClick={(e) => {
+                  this.handleSave({
+                    e: e,
+                    summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                    highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                    deptName: job.MatchedObjectDescriptor.DepartmentName,
+                    title: job.MatchedObjectDescriptor.PositionTitle,
+                    orgName: job.MatchedObjectDescriptor.OrganizationName,
+                    drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                    remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                    grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                    url: job.MatchedObjectDescriptor.PositionURI
+                  })
+                }
+              }>Save Job</button>
                 <a href="#"></a>
             </article>
           )
@@ -378,6 +450,7 @@ class Home extends Component {
                 className="job-card" style={{
                 width: '100%',
                 marginBottom: '20px',
+                borderRadius: '25px'
               }}>
                   <div className="company-logo-img">
                     <img 
@@ -405,7 +478,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button className="save">Save Job</button>
+                  <button disabled={this.props.auth.id === undefined ? true : false} className="save" onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>Save Job</button>
                   <a href="#"></a>
               </article>
             )
@@ -466,7 +553,9 @@ class Home extends Component {
               topCities.push([key, map[key]])
             }
           }
+          console.log('salary ranges', salary50to100, salary100to150, salaryLessThan50, salaryGreatThen150)
           this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+          this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
           const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
@@ -512,7 +601,7 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                      <button className="save">Save Job</button>
+                      <button disabled={this.props.auth.id === undefined ? true : false} className="save">Save Job</button>
                       <a href="#"></a>
                   </article>
               </div>
@@ -545,10 +634,14 @@ class Home extends Component {
                 topCities.push([key, map[key]])
               }
             }
+            //
+            this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
+              //note to self: this needs to be moved to the other ranges too otherwise it won't display the right #
+            //
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
-          this.setState({ filteredSearchJobs: jobs.length })
-          const postData = slice.map((job) => {
+            this.setState({ filteredSearchJobs: jobs.length })
+            const postData = slice.map((job) => {
             return (
               <article 
               onClick={()=> this.setState({ 
@@ -589,7 +682,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button className="save">Save Job</button>
+                  <button disabled={this.props.auth.id === undefined ? true : false} className="save" onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>Save Job</button>
                   <a href="#"></a>
               </article>
             )
@@ -622,6 +729,7 @@ class Home extends Component {
             }
             console.log('new top cities', topCities)
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+            this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
             this.setState({ filteredSearchJobs: jobs.length })
             const postData = slice.map((job) => {
@@ -665,7 +773,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button className="save">Save Job</button>
+                  <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>Save Job</button>
                   <a href="#"></a>
               </article>
             )
@@ -698,6 +820,8 @@ class Home extends Component {
             }
             console.log('new top cities', topCities)
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+            this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
+
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
             this.setState({ filteredSearchJobs: jobs.length })
             const postData = slice.map((job) => {
@@ -729,7 +853,7 @@ class Home extends Component {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  }}>{job.MatchedObjectDescriptor.PositionTitle}  </div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -741,7 +865,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button className="save">Save Job</button>
+                  <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>Save Job</button>
                   <a href="#"></a>
               </article>
             )
@@ -757,7 +895,8 @@ class Home extends Component {
         }
         console.log('no filters selected')
         const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
-
+        console.log('slice', slice)
+        
         //segment jobs by salary
         let salary50to100 = []
         let salary100to150= []
@@ -781,6 +920,8 @@ class Home extends Component {
         }
 
       this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
+      
+      
       //top cities 
       let map = {}
       for (let job of container){
@@ -790,6 +931,7 @@ class Home extends Component {
         }
         map[city] += 1
       }
+
       const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
       let keys = Object.keys(map)
       let topCities = []
@@ -798,17 +940,27 @@ class Home extends Component {
           topCities.push([key, map[key]])
         }
       }
+
       this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
       this.setState({ filteredSearchJobs: container.length})
+
       const postData = slice.map((job) => {
         return (
         <div onClick={()=> this.setState({ 
           show: true, 
+          // saveJob: false,
           jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
           contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
           whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
           majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-          keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
+          keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements,
+          departmentName: job.MatchedObjectDescriptor.DepartmentName,
+          OrganizationName: job.MatchedObjectDescriptor.OrganizationName,
+          drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+          remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+          highGrade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+          jobTitle: job.MatchedObjectDescriptor.PositionTitle,
+          positionURI: job.MatchedObjectDescriptor.PositionURI
         })}>
           <article className="job-card" 
             // onClick={this.handleShow()}
@@ -816,6 +968,7 @@ class Home extends Component {
             style={{
             width: '100%',
             marginBottom: '20px',
+            borderRadius: '25px'
           }}>
               <div className="company-logo-img">
                 <img 
@@ -831,7 +984,7 @@ class Home extends Component {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'pre'
-              }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+              }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
               <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
               <div className="skills-container">
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -843,7 +996,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-              <button className="save">Save Job</button>
+              <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>  Save Job </button>
               <a href="#"></a>
           </article>
           </div>
@@ -888,9 +1055,90 @@ class Home extends Component {
             }
           }
 
-          //find top cities
           let map = {}
-          for (let job of searchedJobs){
+          var jobs 
+          if (this.state.salarySelected === '100K-150K'){
+            jobs = salary100to150
+            let map = {}
+            for (let job of jobs){
+              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              if (map[city] === undefined){
+                  map[city] = 1
+              }
+              map[city] += 1
+            }
+            const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+            let keys = Object.keys(map)
+            let topCities = []
+            for (let key of keys){
+              if (sortedKeys.includes(map[key])){
+                topCities.push([key, map[key]])
+              }
+            }
+          this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+            
+          }
+          if (this.state.salarySelected === '50-100K'){
+            jobs = salary50to100
+            let map = {}
+            for (let job of jobs){
+              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              if (map[city] === undefined){
+                  map[city] = 1
+              }
+              map[city] += 1
+            }
+            const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+            let keys = Object.keys(map)
+            let topCities = []
+            for (let key of keys){
+              if (sortedKeys.includes(map[key])){
+                topCities.push([key, map[key]])
+              }
+            }
+            this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+          }
+          if (this.state.salarySelected === '<50K'){
+            jobs = salaryLessThan50
+            let map = {}
+            for (let job of jobs){
+              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              if (map[city] === undefined){
+                  map[city] = 1
+              }
+              map[city] += 1
+            }
+            const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+            let keys = Object.keys(map)
+            let topCities = []
+            for (let key of keys){
+              if (sortedKeys.includes(map[key])){
+                topCities.push([key, map[key]])
+              }
+            }
+            this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+          }
+          if (this.state.salarySelected === '150K+'){
+            jobs = salaryGreatThen150
+            let map = {}
+            for (let job of jobs){
+              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              if (map[city] === undefined){
+                  map[city] = 1
+              }
+              map[city] += 1
+            }
+            const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
+            let keys = Object.keys(map)
+            let topCities = []
+            for (let key of keys){
+              if (sortedKeys.includes(map[key])){
+                topCities.push([key, map[key]])
+              }
+            }
+            this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
+          }
+          for (let job of jobs){
             let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
             if (map[city] === undefined){
                 map[city] = 1
@@ -906,27 +1154,12 @@ class Home extends Component {
             }
           }
           this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
-          ///
-
-
-          var jobs 
-          if (this.state.salarySelected === '100K-150K'){
-            jobs = salary100to150
-          }
-          if (this.state.salarySelected === '50-100K'){
-            jobs = salary50to100
-          }
-          if (this.state.salarySelected === '<50K'){
-            jobs = salaryLessThan50
-          }
-          if (this.state.salarySelected === '150K+'){
-            jobs = salaryGreatThen150
-          }
-          
           const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+
           this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
 
           this.setState({ filteredSearchJobs: jobs.length })
+
           const postData = slice.map((job) => {
             return (
               <article 
@@ -968,7 +1201,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               } >Apply</button>
-                  <button className="save">Save Job</button>
+                  <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }> Save Job </button>
                   <a href="#"></a>
               </article>
             )
@@ -1101,7 +1348,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-            <button className="save">Save Job</button>
+            <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>Save Job</button>
             <a href="#"></a>
         </article>
       )
@@ -1232,7 +1493,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-            <button className="save">Save Job</button>
+            <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>Save Job</button>
             <a href="#"></a>
         </article>
       )
@@ -1246,10 +1521,6 @@ class Home extends Component {
     }
       //if a search was made and city seleted (no salary selected)
       const justCityNameNoState = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
-      // const slice = justCityNameNoState.slice(this.state.offset, this.state.offset + this.state.perPage)
-      // const searchedJobs = justCityNameNoState
-
-
       const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).slice(this.state.offset, this.state.offset + this.state.perPage)
       const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job))
       console.log('searchedJobs', searchedJobs.length)
@@ -1340,7 +1611,21 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-              <button className="save">Save Job</button>
+              <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                this.handleSave({
+                  e: e,
+                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                  deptName: job.MatchedObjectDescriptor.DepartmentName,
+                  title: job.MatchedObjectDescriptor.PositionTitle,
+                  orgName: job.MatchedObjectDescriptor.OrganizationName,
+                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                  url: job.MatchedObjectDescriptor.PositionURI
+                })
+              }
+              }>Save Job</button>
               <a href="#"></a>
           </article>
         )
@@ -1366,9 +1651,12 @@ class Home extends Component {
 
   render() {
     const current = new Date();
-    const date = `${current.getDate()}/${current.getMonth()+1}/${current.getFullYear()}`
-    const {  onChange, showCityJobs, selectSalaryRnge, setCurrentPage } = this;
+    const date = `${current.getMonth()+1}/${current.getDate()}/${current.getFullYear()}`
+    const {  onChange, showCityJobs, selectSalaryRnge, isJobExpiringSoon } = this;
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
+    const { auth } = this.props
+    const { id } = auth
+    console.log(id)
     return (
       <div style={{
         overflowX: 'clip'
@@ -1376,9 +1664,8 @@ class Home extends Component {
         <Header style={{
         marginBottom: '45px'
         }}/>
-        {/* <HeroSection /> */}
         {/* the offcanvas */}
-          <Offcanvas placement='bottom' show={this.state.show && !this.state.applyClicked}>
+          <Offcanvas style={{ height: '40vh' }} placement='bottom' show={this.state.show && !this.state.applyClicked}>
             <Offcanvas.Header closeButton onClick={()=> this.setState({ show: false })}>
               <Offcanvas.Title> <h2>  Job Information </h2></Offcanvas.Title>
             </Offcanvas.Header>
@@ -1454,7 +1741,7 @@ class Home extends Component {
                   }}>
                     {/* //the filters */}
                     <div className='row' style={{
-                      height: '48vh',
+                      height: '40vh',
                       flexDirection: 'column',
                       width: '400px',
                       marginRight: '20px',
@@ -1462,7 +1749,7 @@ class Home extends Component {
                         <div style={{
                           alignContent: 'flex-start',
                           display: 'flex',
-                          height: '48vh',
+                          height: '40vh',
                           flexDirection: 'column',
                           background: '#f8f9fa',
                           padding: '1.5rem 1rem',
@@ -1670,19 +1957,19 @@ class Home extends Component {
                                        })
                                           :
                                           <div style={{
-                                            margin: '50px auto',
+                                            margin: '30px auto',
                                             display: 'flex',
                                             listStyle: 'none',
                                             outline: 'none',
                                             justifyContent: 'center'
                                           }}>
-                                            <RotatingLines
-                                            strokeColor="black"
-                                            strokeWidth="5"
-                                            animationDuration="0.75"
-                                            width="50"
-                                            visible={true}
-                                          /> 
+                                              <RotatingLines
+                                              strokeColor="black"
+                                              strokeWidth="5"
+                                              animationDuration="0.75"
+                                              width="50"
+                                              visible={true}
+                                            /> 
                                         </div>
                                       } 
                                       </ul>
@@ -1929,7 +2216,9 @@ class Home extends Component {
 const mapState = state => {
   return {
     username: state.auth.username,
-    forcedPage: state.forcePage
+    forcedPage: state.forcePage,
+    auth: state.auth,
+    jobs: state.jobs
   }
 }
 
@@ -1940,6 +2229,9 @@ const mapDispatch = (dispatch) => {
     },
     setForcedPage: (pageNumber) => {
       dispatch(updateForcedPage(pageNumber))
+    },
+    saveJob: (job) => {
+      dispatch(saveJobs(job))
     }
   }
 }

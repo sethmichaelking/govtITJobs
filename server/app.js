@@ -1,7 +1,9 @@
 const path = require('path')
 const express = require('express')
 const morgan = require('morgan')
+const Job = require('./db/models/Job')
 const app = express()
+
 module.exports = app
 
 // logging middleware
@@ -16,6 +18,9 @@ app.use('/api', require('./api'))
 
 app.get('/', (req, res)=> res.sendFile(path.join(__dirname, '..', 'public/index.html')));
 
+//body parser
+var bodyParser = require('body-parser')
+
 // static file-serving middleware
 app.use(express.static(path.join(__dirname, '..', 'public')))
 
@@ -27,6 +32,38 @@ app.use((req, res, next) => {
     next(err)
   } else {
     next()
+  }
+})
+
+app.post('/savejob', async (req, res) => {
+  try {
+    const job = await Job.create(req.body)
+    res.send(job)
+  }
+  catch(err){
+    console.log(err)
+  }
+})
+
+app.delete('/jobs/:id', async (req, res)=> {
+  try{
+    console.log('id', req.params.id)
+    const job = await Job.findByPk(req.params.id)
+    await job.destroy()
+    res.sendStatus(204)
+  }
+  catch(err){
+    console.log(err)
+  }
+})
+
+app.get('/jobs/', async(req, res) => {
+  try {
+    const jobs = await Job.findAll()
+    res.send(jobs)
+  }
+  catch(err){
+    console.log(err)
   }
 })
 
