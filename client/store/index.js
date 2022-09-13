@@ -3,9 +3,11 @@ import {createLogger} from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
 import auth from './auth'
 import forcePage from './forcePage'
+import jobs from './jobs'
 const reducer = combineReducers({ 
     auth,
     forcePage,
+    jobs
 })
 const middleware = applyMiddleware(thunkMiddleware, createLogger({collapsed: true}))
 const store = createStore(reducer, middleware)
@@ -13,6 +15,8 @@ const store = createStore(reducer, middleware)
 export default store
 export * from './auth'
 export * from './forcePage'
+export * from './jobs'
+
 
 
 

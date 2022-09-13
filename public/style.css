@@ -2,6 +2,29 @@ body {
   font-family: sans-serif;
 }
 
+.btn-color{
+  background-color: #0e1c36;
+  color: #fff;
+  
+}
+
+.profile-image-pic{
+  height: 200px;
+  width: 200px;
+  object-fit: cover;
+}
+
+
+
+.cardbody-color{
+  background-color: #ebf2fa;
+}
+
+a{
+  text-decoration: none;
+}
+
+
 a {
   text-decoration: none;
 }
@@ -33,6 +56,13 @@ article.job-card:focus {
   padding: 5px;
 }
 
+
+button:disabled {
+  border: 1px solid #999999;
+  background-color: darkgray;
+  color: #fff;
+  cursor: not-allowed;
+}
 .company-logo-img img {
   max-height: calc(100% - 10px);
   max-width: calc(100% - 10px);
@@ -53,6 +83,14 @@ article.job-card:focus {
   border: 1px solid #a4a5a8;
   color: #777;
 }
+
+.delete {
+  grid-area: 3 / 3 / 4 / 4;
+  background-color: rgb(207, 138, 138);
+  border: 1px solid #a4a5a8;
+  color: #777;
+}
+
 .job-title {
   grid-area: 1 / 2 / 2 / 3;
   font-size: 16px;
@@ -114,7 +152,7 @@ nav a {
 }
 
 .container {
-  max-width: 75vw !important
+  max-width: 90vw 
 }
 form div {
   margin: 1em;
