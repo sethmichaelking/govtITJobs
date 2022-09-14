@@ -21,10 +21,13 @@ import {
   FaRegSadCry
 } from 'react-icons/fa'
 
+let savedTheJob = false
+
 class Home extends Component {
   constructor(){
     super()
       this.state = {
+        clicked: false,
         NothingFound: false,
         show: false,
         data: [],
@@ -63,7 +66,20 @@ class Home extends Component {
       this.setCurrentPage = this.setCurrentPage.bind(this)
       this.handleSave = this.handleSave.bind(this)
       this.isJobExpiringSoon = this.isJobExpiringSoon.bind(this)
+      // this.changeButtonName = this.changeButtonName.bind(this)
   }
+  // changeButtonName(e){
+  //   console.log('in the func')
+  //   this.setState({ clicked: true })
+  //   console.log('state clicked', this.state.clicked)
+  //   if (this.state.clicked){
+  //     console.log(e.target)
+  //     e.target.innerHTML = 'Clicked'
+  //   }
+  //   setTimeout(()=> {
+  //     this.setState({ clicked: false })
+  //   }, 4000)
+  // }
   isJobExpiringSoon(jobDate, startDate){
     const expDate = moment(jobDate).format(`llll`)
     const publicationDate = moment(startDate).format(`llll`)
@@ -77,7 +93,6 @@ class Home extends Component {
 
 
     if (daysBetweenPubDates < 5) {
-      console.log('added within last 5 days')
       return (
         <Badge bg="success"> Added {Math.floor(parseInt(daysBetweenDates.toString().slice(0, 3)))} days ago</Badge>
       )
@@ -109,6 +124,12 @@ class Home extends Component {
       userId: this.props.auth.id * 1
     }
     this.props.saveJob(job)
+    savedTheJob = true
+    console.log('savedJob', savedTheJob)
+    // setTimeout(async ()=> {
+    //   savedTheJob = false
+    // }, 4000)
+    console.log('savedJob', savedTheJob)
   }
 
   setCurrentPage(page){
@@ -202,7 +223,7 @@ class Home extends Component {
       return 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Seal_of_the_United_States_Congress.svg/1200px-Seal_of_the_United_States_Congress.svg.png'
     }
     if (name === 'Department of Transportation'){
-      return 'https://www.transportation.gov/themes/custom/dot_cms/images/seal_dot.png'
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Seal_of_the_United_States_Department_of_Transportation.svg/1200px-Seal_of_the_United_States_Department_of_Transportation.svg.png'
     }
     if (name === 'Department of Defense'){
       return 'https://upload.wikimedia.org/wikipedia/commons/e/e0/United_States_Department_of_Defense_Seal.svg'
@@ -218,6 +239,21 @@ class Home extends Component {
     }
     if (name === 'Executive Office of the President'){
       return 'https://upload.wikimedia.org/wikipedia/commons/3/36/Seal_of_the_President_of_the_United_States.svg'
+    }
+    if (name === 'Central Intelligence Agency'){
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/Seal_of_the_Central_Intelligence_Agency.svg/2048px-Seal_of_the_Central_Intelligence_Agency.svg.png'
+    }
+    if (name === 'Environmental Protection Agency'){
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Seal_of_the_United_States_Environmental_Protection_Agency.svg/2048px-Seal_of_the_United_States_Environmental_Protection_Agency.svg.png'
+    }
+    if (name === 'Smithsonian Institution'){
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Smithsonian_logo_color.svg/1200px-Smithsonian_logo_color.svg.png'
+    }
+    if (name === 'National Aeronautics and Space Administration'){
+      return 'https://www.nasa.gov/sites/default/files/thumbnails/image/edu_what_is_nasa_emblem.jpg'
+    }
+    if (name === 'Department of Homeland Security'){
+      return 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Seal_of_the_United_States_Department_of_Homeland_Security.svg/1200px-Seal_of_the_United_States_Department_of_Homeland_Security.svg.png'
     }
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png'
   }
@@ -249,7 +285,7 @@ class Home extends Component {
       //if no search but city selected && salary selected
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length > 0){
         console.log('city and salary')
-        {console.log(this.state.salarySelected, 'salary selected')}
+
         const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
         let salary50to100 = []
         let salary100to150= []
@@ -349,7 +385,7 @@ class Home extends Component {
                   textOverflow: 'ellipsis',
                   whiteSpace: 'pre'
                 }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
-                <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
+                <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
                 <div className="skills-container">
                   <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
                   <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
@@ -389,7 +425,6 @@ class Home extends Component {
          })
          this.setState({ loading: false })
          return
-      
     }
       //if no search no salary selected 
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length === 0){
@@ -466,7 +501,7 @@ class Home extends Component {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -553,7 +588,7 @@ class Home extends Component {
               topCities.push([key, map[key]])
             }
           }
-          console.log('salary ranges', salary50to100, salary100to150, salaryLessThan50, salaryGreatThen150)
+
           this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
           this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
           const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
@@ -589,7 +624,7 @@ class Home extends Component {
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'pre'
-                      }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                      }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
                       <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                       <div className="skills-container">
                         <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -670,7 +705,7 @@ class Home extends Component {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -727,7 +762,6 @@ class Home extends Component {
                 topCities.push([key, map[key]])
               }
             }
-            console.log('new top cities', topCities)
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
             const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
@@ -761,7 +795,7 @@ class Home extends Component {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -818,7 +852,6 @@ class Home extends Component {
                 topCities.push([key, map[key]])
               }
             }
-            console.log('new top cities', topCities)
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
             this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
 
@@ -853,7 +886,7 @@ class Home extends Component {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle}  </div>
+                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)} </div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -866,20 +899,20 @@ class Home extends Component {
               }
               }>Apply</button>
                   <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>Save Job</button>
+                    this.handleSave({
+                      e: e,
+                      summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                      highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                      deptName: job.MatchedObjectDescriptor.DepartmentName,
+                      title: job.MatchedObjectDescriptor.PositionTitle,
+                      orgName: job.MatchedObjectDescriptor.OrganizationName,
+                      drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                      remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                      grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                      url: job.MatchedObjectDescriptor.PositionURI
+                    })
+                  }
+              }> Save Job </button>
                   <a href="#"></a>
               </article>
             )
@@ -895,7 +928,6 @@ class Home extends Component {
         }
         console.log('no filters selected')
         const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
-        console.log('slice', slice)
         
         //segment jobs by salary
         let salary50to100 = []
@@ -997,21 +1029,20 @@ class Home extends Component {
               }
               }>Apply</button>
               <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>  Save Job </button>
-              <a href="#"></a>
+                  this.handleSave({
+                    e: e,
+                    summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                    highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                    deptName: job.MatchedObjectDescriptor.DepartmentName,
+                    title: job.MatchedObjectDescriptor.PositionTitle,
+                    orgName: job.MatchedObjectDescriptor.OrganizationName,
+                    drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                    remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                    grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                    url: job.MatchedObjectDescriptor.PositionURI
+                  })
+                }
+              }>  {savedTheJob === true ? 'Saved' : 'Save Job'} </button>
           </article>
           </div>
         )
@@ -1189,7 +1220,7 @@ class Home extends Component {
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
                   <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
                   <div className="skills-container">
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -1201,22 +1232,22 @@ class Home extends Component {
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               } >Apply</button>
-                  <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
+              <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
+                  this.handleSave({
+                    e: e,
+                    summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
+                    highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
+                    deptName: job.MatchedObjectDescriptor.DepartmentName,
+                    title: job.MatchedObjectDescriptor.PositionTitle,
+                    orgName: job.MatchedObjectDescriptor.OrganizationName,
+                    drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
+                    remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
+                    grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
+                    url: job.MatchedObjectDescriptor.PositionURI
+                  })
+                  this.setState({ clicked: true })
+                }
               }> Save Job </button>
-                  <a href="#"></a>
               </article>
             )
           })
@@ -1336,7 +1367,7 @@ class Home extends Component {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'pre'
-            }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+            }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
             <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
             <div className="skills-container">
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -1481,7 +1512,7 @@ class Home extends Component {
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'pre'
-            }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+            }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
             <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
             <div className="skills-container">
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -1599,7 +1630,7 @@ class Home extends Component {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'pre'
-              }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
+              }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
               <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName ? job.MatchedObjectDescriptor.OrganizationName : 'loading'}</div>
               <div className="skills-container">
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
@@ -1656,7 +1687,8 @@ class Home extends Component {
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
     const { auth } = this.props
     const { id } = auth
-    console.log(id)
+    savedTheJob = this.state.clicked
+    console.log('saved job', savedTheJob)
     return (
       <div style={{
         overflowX: 'clip'
