@@ -55,7 +55,8 @@ class Home extends Component {
         remote: '',
         highGrade: '',
         jobTitle: '',
-        positionURI: ''
+        positionURI: '',
+        savedJobs: new Set()
       }
       this.getData = this.getData.bind(this)
       this.displayImage = this.displayImage.bind(this)
@@ -66,20 +67,40 @@ class Home extends Component {
       this.setCurrentPage = this.setCurrentPage.bind(this)
       this.handleSave = this.handleSave.bind(this)
       this.isJobExpiringSoon = this.isJobExpiringSoon.bind(this)
-      // this.changeButtonName = this.changeButtonName.bind(this)
+      this.getJobs = this.getJobs.bind(this)
+      this.jobs = undefined
   }
-  // changeButtonName(e){
-  //   console.log('in the func')
-  //   this.setState({ clicked: true })
-  //   console.log('state clicked', this.state.clicked)
-  //   if (this.state.clicked){
-  //     console.log(e.target)
-  //     e.target.innerHTML = 'Clicked'
-  //   }
-  //   setTimeout(()=> {
-  //     this.setState({ clicked: false })
-  //   }, 4000)
-  // }
+
+      async getJobs(){
+            if (this.jobs === undefined){
+              let container = []
+              var host = 'data.usajobs.gov'; 
+              var userAgent = 'sethkingriter@gmail.com'
+              var authKey = 'InzNEWOLXdrBHP/62f3tqX6pOhSGmFDaTdHOB9zEmbg=' 
+              this.setState({ loading: true })
+              for (let i = 1; i <= 2; i++){
+                const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
+                  method: 'GET',      
+                  headers: {          
+                      "Host": host,          
+                      "User-Agent": userAgent,          
+                      "Authorization-Key": authKey      
+                    }  
+                  }
+                )
+                .then(response => response.json())
+                .then(data => {
+                  const gigs = data.SearchResult.SearchResultItems
+                  container.push(...gigs)
+                });
+          }
+          this.jobs = container
+          this.setState({ loading: false })
+        }
+        return this.jobs
+      }
+
+
   isJobExpiringSoon(jobDate, startDate){
     const expDate = moment(jobDate).format(`llll`)
     const publicationDate = moment(startDate).format(`llll`)
@@ -124,12 +145,8 @@ class Home extends Component {
       userId: this.props.auth.id * 1
     }
     this.props.saveJob(job)
-    savedTheJob = true
-    console.log('savedJob', savedTheJob)
-    // setTimeout(async ()=> {
-    //   savedTheJob = false
-    // }, 4000)
-    console.log('savedJob', savedTheJob)
+    // this.getData()
+
   }
 
   setCurrentPage(page){
@@ -259,27 +276,7 @@ class Home extends Component {
   }
     
    getData = async() => {
-    let container = []
-    var host = 'data.usajobs.gov'; 
-    var userAgent = 'sethkingriter@gmail.com'
-    var authKey = 'InzNEWOLXdrBHP/62f3tqX6pOhSGmFDaTdHOB9zEmbg=' 
-    this.setState({ loading: true })
-    for (let i = 1; i <= 2; i++){
-      const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
-        method: 'GET',      
-        headers: {          
-            "Host": host,          
-            "User-Agent": userAgent,          
-            "Authorization-Key": authKey      
-          }  
-        }
-      )
-      .then(response => response.json())
-      .then(data => {
-        const gigs = data.SearchResult.SearchResultItems
-        container.push(...gigs)
-      });
-    }
+    let container = await this.getJobs()
     //if no search selected
     if (this.state.search.length === 0 ){
       //if no search but city selected && salary selected
@@ -391,30 +388,13 @@ class Home extends Component {
                   <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                   <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                 </div>
-                <button className="apply" onClick={() => {
+                <button style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-              <button 
-                disabled={this.props.auth.id === undefined ? true : false}
-                className="save" 
-                onClick={(e) => {
-                  this.handleSave({
-                    e: e,
-                    summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                    highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                    deptName: job.MatchedObjectDescriptor.DepartmentName,
-                    title: job.MatchedObjectDescriptor.PositionTitle,
-                    orgName: job.MatchedObjectDescriptor.OrganizationName,
-                    drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                    remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                    grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                    url: job.MatchedObjectDescriptor.PositionURI
-                  })
-                }
-              }>Save Job</button>
-                <a href="#"></a>
             </article>
           )
         })
@@ -508,27 +488,13 @@ class Home extends Component {
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                     <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
-                  <button className="apply" onClick={() => {
+                  <button className="apply" style={{
+                      borderRadius: '25px'
+                }} onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button disabled={this.props.auth.id === undefined ? true : false} className="save" onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>Save Job</button>
-                  <a href="#"></a>
               </article>
             )
           })
@@ -631,15 +597,15 @@ class Home extends Component {
                         <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                         <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                       </div>
-                      <button className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-                      <button disabled={this.props.auth.id === undefined ? true : false} className="save">Save Job</button>
-                      <a href="#"></a>
+                      <button style={{
+                      borderRadius: '25px'
+                       }}   className="apply" onClick={() => {
+                          this.setState({ applyClicked: true })
+                          location.href = job.MatchedObjectDescriptor.PositionURI
+                          }
+                        }>Apply</button>
                   </article>
-              </div>
+                </div>
               </div>
             )
           })
@@ -712,27 +678,13 @@ class Home extends Component {
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                     <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
-                  <button className="apply" onClick={() => {
+                  <button style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button disabled={this.props.auth.id === undefined ? true : false} className="save" onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>Save Job</button>
-                  <a href="#"></a>
               </article>
             )
           })
@@ -802,27 +754,13 @@ class Home extends Component {
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                     <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div> 
                   </div>
-                  <button className="apply" onClick={() => {
+                  <button style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>Save Job</button>
-                  <a href="#"></a>
               </article>
             )
           })
@@ -893,27 +831,13 @@ class Home extends Component {
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                     <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
-                  <button className="apply" onClick={() => {
+                  <button style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-                  <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                    this.handleSave({
-                      e: e,
-                      summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                      highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                      deptName: job.MatchedObjectDescriptor.DepartmentName,
-                      title: job.MatchedObjectDescriptor.PositionTitle,
-                      orgName: job.MatchedObjectDescriptor.OrganizationName,
-                      drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                      remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                      grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                      url: job.MatchedObjectDescriptor.PositionURI
-                    })
-                  }
-              }> Save Job </button>
-                  <a href="#"></a>
               </article>
             )
           })
@@ -922,6 +846,7 @@ class Home extends Component {
             pageCount: Math.ceil(jobs.length / this.state.perPage),      
             postData
            })
+
            this.setState({ loading: false })
            return
           }
@@ -1023,26 +948,13 @@ class Home extends Component {
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                 <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
               </div>
-              <button className="apply" onClick={() => {
+              <button  style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-              <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                  this.handleSave({
-                    e: e,
-                    summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                    highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                    deptName: job.MatchedObjectDescriptor.DepartmentName,
-                    title: job.MatchedObjectDescriptor.PositionTitle,
-                    orgName: job.MatchedObjectDescriptor.OrganizationName,
-                    drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                    remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                    grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                    url: job.MatchedObjectDescriptor.PositionURI
-                  })
-                }
-              }>  {savedTheJob === true ? 'Saved' : 'Save Job'} </button>
           </article>
           </div>
         )
@@ -1227,27 +1139,13 @@ class Home extends Component {
                     <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                     <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
                   </div>
-                  <button className="apply" onClick={() => {
+                  <button style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               } >Apply</button>
-              <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                  this.handleSave({
-                    e: e,
-                    summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                    highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                    deptName: job.MatchedObjectDescriptor.DepartmentName,
-                    title: job.MatchedObjectDescriptor.PositionTitle,
-                    orgName: job.MatchedObjectDescriptor.OrganizationName,
-                    drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                    remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                    grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                    url: job.MatchedObjectDescriptor.PositionURI
-                  })
-                  this.setState({ clicked: true })
-                }
-              }> Save Job </button>
               </article>
             )
           })
@@ -1374,26 +1272,13 @@ class Home extends Component {
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                 <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
             </div>
-            <button className="apply" onClick={() => {
+            <button  style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-            <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>Save Job</button>
             <a href="#"></a>
         </article>
       )
@@ -1519,27 +1404,13 @@ class Home extends Component {
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                 <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
             </div>
-            <button className="apply" onClick={() => {
+            <button style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-            <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>Save Job</button>
-            <a href="#"></a>
         </article>
       )
     })
@@ -1637,27 +1508,13 @@ class Home extends Component {
                 <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
                 <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
               </div>
-              <button className="apply" onClick={() => {
+              <button style={{
+                      borderRadius: '25px'
+                }} className="apply" onClick={() => {
                 this.setState({ applyClicked: true })
                 location.href = job.MatchedObjectDescriptor.PositionURI
               }
               }>Apply</button>
-              <button className="save" disabled={this.props.auth.id === undefined ? true : false} onClick={(e) => {
-                this.handleSave({
-                  e: e,
-                  summary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary,
-                  highGrade: !isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A',
-                  deptName: job.MatchedObjectDescriptor.DepartmentName,
-                  title: job.MatchedObjectDescriptor.PositionTitle,
-                  orgName: job.MatchedObjectDescriptor.OrganizationName,
-                  drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-                  remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-                  grade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-                  url: job.MatchedObjectDescriptor.PositionURI
-                })
-              }
-              }>Save Job</button>
-              <a href="#"></a>
           </article>
         )
       })
