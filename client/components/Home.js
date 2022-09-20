@@ -2,26 +2,17 @@ import {connect} from 'react-redux'
 import React, { Component } from 'react'
 import Header from './Header'
 import moment from 'moment'
-import HeroSection from './HeroSection'
 import ReactPaginate from 'react-paginate'
 import { RotatingLines } from 'react-loader-spinner'
-import Offcanvas from 'react-bootstrap/Offcanvas';
-import Button from 'react-bootstrap/Button';
-import { saveJobs } from '../store'
-import { setForcePage, updateForcedPage } from '../store'
+import { setForcePage, updateForcedPage, getJobs } from '../store'
 import Badge from 'react-bootstrap/Badge';
-
-import {
-  FcCheckmark
-} from 'react-icons/fc'
+import axios from 'axios'
+import Job from './Job'
 import {
   GiCancel
 } from 'react-icons/gi'
-import {
-  FaRegSadCry
-} from 'react-icons/fa'
+import EmptyState from './EmptyState'
 
-let savedTheJob = false
 
 class Home extends Component {
   constructor(){
@@ -74,26 +65,30 @@ class Home extends Component {
       async getJobs(){
             if (this.jobs === undefined){
               let container = []
-              var host = 'data.usajobs.gov'; 
-              var userAgent = 'sethkingriter@gmail.com'
-              var authKey = 'InzNEWOLXdrBHP/62f3tqX6pOhSGmFDaTdHOB9zEmbg=' 
+              // var host = 'data.usajobs.gov'; 
+              // var userAgent = 'sethkingriter@gmail.com'
+              // var authKey = 'InzNEWOLXdrBHP/62f3tqX6pOhSGmFDaTdHOB9zEmbg=' 
               this.setState({ loading: true })
-              for (let i = 1; i <= 2; i++){
-                const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
-                  method: 'GET',      
-                  headers: {          
-                      "Host": host,          
-                      "User-Agent": userAgent,          
-                      "Authorization-Key": authKey      
-                    }  
-                  }
-                )
-                .then(response => response.json())
-                .then(data => {
-                  const gigs = data.SearchResult.SearchResultItems
-                  container.push(...gigs)
-                });
-          }
+              const response = await axios.get('/apijobs')
+              const data = response.data
+              container.push(...data)
+          //     for (let i = 1; i <= 2; i++){
+          //       const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
+          //         method: 'GET',      
+          //         headers: {          
+          //             "Host": host,          
+          //             "User-Agent": userAgent,          
+          //             "Authorization-Key": authKey      
+          //           }  
+          //         }
+          //       )
+          //       .then(response => response.json())
+          //       .then(data => {
+          //         const gigs = data.SearchResult.SearchResultItems
+          //         console.log('jobs', ...gigs)
+          //         container.push(...gigs)
+          //       });
+          // }
           this.jobs = container
           this.setState({ loading: false })
         }
@@ -125,6 +120,7 @@ class Home extends Component {
     } 
 
   }
+
 
   handleClose(){
     this.setState({ show: false })
@@ -283,14 +279,15 @@ class Home extends Component {
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length > 0){
         console.log('city and salary')
 
-        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
+        const searchedJobs = container.filter(job => job.city.split(',')[0] === (this.state.citySelected))
+
         let salary50to100 = []
         let salary100to150= []
         let salaryLessThan50 = []
         let salaryGreatThen150 = []
         for (let job of searchedJobs){
-          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          let min = job.min
+          let max = job.max
           if (min > 50000 && max <= 100000){
             salary50to100.push(job)
           }
@@ -304,7 +301,7 @@ class Home extends Component {
             salaryGreatThen150.push(job)
           }
         }
-        //shows amount next to salary range 
+        // shows amount next to salary range 
         this.setState({ salaryRanges: ([['50-100K', salary50to100.length], ['100K-150K', salary100to150.length], ['150K+', salaryGreatThen150.length], ['<50K', salaryLessThan50.length]]) })
 
         var searchedJobsWithSalary
@@ -323,23 +320,7 @@ class Home extends Component {
         }
         
         if (searchedJobsWithSalary === undefined || searchedJobsWithSalary.length === 0){
-          const postData = <div style={{
-            marginLeft: '37px',
-            margin: '78px auto',
-            display: 'flex',
-            listStyle: 'none',
-            outline: 'none',
-            justifyContent: 'center'
-          }}> 
-           <div>
-            <div><FaRegSadCry size={150}/> </div>
-            <p style={{
-                  marginLeft: '-21px',
-                  marginTop: '10px'
-            }}> No jobs founds. Search again. </p>
-            <Button style={{ marginLeft: '21px' }}variant="primary" onClick={()=> window.location.reload()}>Reset Filters</Button>
-            </div>
-          </div>
+          const postData = <EmptyState />
           this.setState({
             NothingFound: true,
             pageCount: 0,      
@@ -354,48 +335,7 @@ class Home extends Component {
         this.setState({ filteredSearchJobs: searchedJobsWithSalary.length })
         const postData = slice.map((job) => {
           return (
-            <article 
-              onClick={()=> this.setState({ 
-                show: true, 
-                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-              })}
-              className="job-card" style={{
-              width: '100%',
-              marginBottom: '20px',
-            }}>
-                <div className="company-logo-img">
-                  <img 
-                      src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                      style={{
-                      verticalAlign: 'middle',
-                      width: '116px',
-                      height: '116px',
-                      borderRadius: '50%',
-                      }} />  
-                </div>
-                <div className="job-title" style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'pre'
-                }}>{job.MatchedObjectDescriptor.PositionTitle}</div>
-                <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-                <div className="skills-container">
-                  <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                  <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                  <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-                </div>
-                <button style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-            </article>
+            <Job job = {job} />
           )
         })
     
@@ -409,16 +349,17 @@ class Home extends Component {
       //if no search no salary selected 
       if (this.state.citySelected.length > 0 && this.state.salarySelected.length === 0){
         console.log('just city selected')
-          const justCityNameNoState = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
+          const justCityNameNoState = container.filter(job => job.city.split(',')[0] === (this.state.citySelected))
           const slice = justCityNameNoState.slice(this.state.offset, this.state.offset + this.state.perPage)
           const searchedJobs = justCityNameNoState
+
           let salary50to100 = []
           let salary100to150= []
           let salaryLessThan50 = []
           let salaryGreatThen150 = []
           for (let job of justCityNameNoState){
-            let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-            let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+            let min = job.min
+            let max = job.max
             if (min > 50000 && max <= 100000){
               salary50to100.push(job)
             }
@@ -434,7 +375,7 @@ class Home extends Component {
           }
           let map = {}
           for (let job of justCityNameNoState){
-            let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+            let city = job.city.split(',')[0]
             if (map[city] === undefined){
                 map[city] = 1
             }
@@ -453,49 +394,7 @@ class Home extends Component {
          this.setState({ filteredSearchJobs: searchedJobs.length })
           const postData = slice.map((job) => {
             return (
-              <article 
-                onClick={()=> this.setState({ 
-                  show: true, 
-                  jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-                  contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-                  whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-                  majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-                  keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-                })}
-                className="job-card" style={{
-                width: '100%',
-                marginBottom: '20px',
-                borderRadius: '25px'
-              }}>
-                  <div className="company-logo-img">
-                    <img 
-                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                        style={{
-                        verticalAlign: 'middle',
-                        width: '116px',
-                        height: '116px',
-                        borderRadius: '50%',
-                        }} />  
-                  </div>
-                  <div className="job-title" style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-                  <div className="skills-container">
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-                  </div>
-                  <button className="apply" style={{
-                      borderRadius: '25px'
-                }} onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-              </article>
+              <Job job = {job} />
             )
           })
       
@@ -520,8 +419,8 @@ class Home extends Component {
           let salaryLessThan50 = []
           let salaryGreatThen150 = []
           for (let job of searchedJobs){
-            let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-            let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+            let min = job.min
+            let max = job.max
             if (min > 50000 && max <= 100000){
               salary50to100.push(job)
             }
@@ -540,7 +439,7 @@ class Home extends Component {
           jobs = salary100to150
           let map = {}
           for (let job of jobs){
-            let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+            let city = job.city.split(',')[0]
             if (map[city] === undefined){
                 map[city] = 1
             }
@@ -561,52 +460,7 @@ class Home extends Component {
           this.setState({ filteredSearchJobs: jobs.length })
           const postData = slice.map((job) => {
             return (
-              <div 
-              onClick={()=> this.setState({ 
-                show: true, 
-                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-              })}>
-                <div>
-                  <article 
-                    className="job-card" style={{
-                    width: '100%',
-                    marginBottom: '20px',
-                  }}>
-                      <div className="company-logo-img">
-                        <img 
-                            src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                            style={{
-                            verticalAlign: 'middle',
-                            width: '116px',
-                            height: '116px',
-                            borderRadius: '50%',
-                            }} />  
-                      </div>
-                      <div className="job-title" style={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'pre'
-                      }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-                      <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-                      <div className="skills-container">
-                        <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                        <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                        <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-                      </div>
-                      <button style={{
-                      borderRadius: '25px'
-                       }}   className="apply" onClick={() => {
-                          this.setState({ applyClicked: true })
-                          location.href = job.MatchedObjectDescriptor.PositionURI
-                          }
-                        }>Apply</button>
-                  </article>
-                </div>
-              </div>
+              <Job job = {job} />
             )
           })
       
@@ -621,7 +475,7 @@ class Home extends Component {
             jobs = salary50to100
             let map = {}
             for (let job of jobs){
-              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              let city = job.city.split(',')[0]
               if (map[city] === undefined){
                   map[city] = 1
               }
@@ -644,48 +498,7 @@ class Home extends Component {
             this.setState({ filteredSearchJobs: jobs.length })
             const postData = slice.map((job) => {
             return (
-              <article 
-              onClick={()=> this.setState({ 
-                show: true, 
-                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-              })}
-                className="job-card" style={{
-                width: '100%',
-                marginBottom: '20px',
-              }}>
-                  <div className="company-logo-img">
-                    <img 
-                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                        style={{
-                        verticalAlign: 'middle',
-                        width: '116px',
-                        height: '116px',
-                        borderRadius: '50%',
-                        }} />  
-                  </div>
-                  <div className="job-title" style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-                  <div className="skills-container">
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-                  </div>
-                  <button style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-              </article>
+              <Job job = {job} />
             )
           })
       
@@ -700,7 +513,7 @@ class Home extends Component {
             jobs = salaryLessThan50
             let map = {}
             for (let job of jobs){
-              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              let city = city.split(',')[0]
               if (map[city] === undefined){
                   map[city] = 1
               }
@@ -720,48 +533,7 @@ class Home extends Component {
             this.setState({ filteredSearchJobs: jobs.length })
             const postData = slice.map((job) => {
             return (
-              <article 
-              onClick={()=> this.setState({ 
-                show: true, 
-                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-              })}
-                className="job-card" style={{
-                width: '100%',
-                marginBottom: '20px',
-              }}>
-                  <div className="company-logo-img">
-                    <img 
-                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                        style={{
-                        verticalAlign: 'middle',
-                        width: '116px',
-                        height: '116px',
-                        borderRadius: '50%',
-                        }} />  
-                  </div>
-                  <div className="job-title" style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-                  <div className="skills-container">
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div> 
-                  </div>
-                  <button style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-              </article>
+              <Job job = {job} />
             )
           })
       
@@ -776,7 +548,7 @@ class Home extends Component {
             jobs = salaryGreatThen150
             let map = {}
             for (let job of jobs){
-              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              let city = job.city.split(',')[0]
               if (map[city] === undefined){
                   map[city] = 1
               }
@@ -797,48 +569,7 @@ class Home extends Component {
             this.setState({ filteredSearchJobs: jobs.length })
             const postData = slice.map((job) => {
             return (
-              <article 
-              onClick={()=> this.setState({ 
-                show: true, 
-                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-              })}
-                className="job-card" style={{
-                width: '100%',
-                marginBottom: '20px',
-              }}>
-                  <div className="company-logo-img">
-                    <img 
-                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                        style={{
-                        verticalAlign: 'middle',
-                        width: '116px',
-                        height: '116px',
-                        borderRadius: '50%',
-                        }} />  
-                  </div>
-                  <div className="job-title" style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)} </div>
-                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-                  <div className="skills-container">
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-                  </div>
-                  <button style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-              </article>
+              <Job job = {job} />
             )
           })
       
@@ -853,15 +584,15 @@ class Home extends Component {
         }
         console.log('no filters selected')
         const slice = container.slice(this.state.offset, this.state.offset + this.state.perPage)
-        
+
         //segment jobs by salary
         let salary50to100 = []
         let salary100to150= []
         let salaryLessThan50 = []
         let salaryGreatThen150 = []
         for (let job of container){
-          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          let min = job.min
+          let max = job.max
           if (min > 50000 && max <= 100000){
             salary50to100.push(job)
           }
@@ -882,7 +613,7 @@ class Home extends Component {
       //top cities 
       let map = {}
       for (let job of container){
-        let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+        let city = job.city.split(',')[0]
         if (map[city] === undefined){
             map[city] = 1
         }
@@ -903,59 +634,8 @@ class Home extends Component {
 
       const postData = slice.map((job) => {
         return (
-        <div onClick={()=> this.setState({ 
-          show: true, 
-          // saveJob: false,
-          jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-          contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-          whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-          majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-          keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements,
-          departmentName: job.MatchedObjectDescriptor.DepartmentName,
-          OrganizationName: job.MatchedObjectDescriptor.OrganizationName,
-          drugTest: job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired,
-          remote: job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible,
-          highGrade: job.MatchedObjectDescriptor.UserArea.Details.HighGrade,
-          jobTitle: job.MatchedObjectDescriptor.PositionTitle,
-          positionURI: job.MatchedObjectDescriptor.PositionURI
-        })}>
-          <article className="job-card" 
-            // onClick={this.handleShow()}
-            onClick={this.showTheModal}
-            style={{
-            width: '100%',
-            marginBottom: '20px',
-            borderRadius: '25px'
-          }}>
-              <div className="company-logo-img">
-                <img 
-                    src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                    style={{
-                    verticalAlign: 'middle',
-                    width: '116px',
-                    height: '116px',
-                    borderRadius: '50%',
-                    }} />  
-              </div>
-              <div className="job-title" style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'pre'
-              }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-              <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-              <div className="skills-container">
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-              </div>
-              <button  style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-          </article>
+          <div>
+             <Job job = {job} />
           </div>
         )
       })
@@ -966,8 +646,6 @@ class Home extends Component {
        })
        this.setState({ loading: false })
       } 
-
-
     }
       
     //if a search was made and no city selected
@@ -975,15 +653,15 @@ class Home extends Component {
       //if search was made and no city selected BUT salary selected
       if (this.state.salarySelected.length > 0){
         console.log('search and salary')
-        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
+        const searchedJobs = container.filter(job => job.JobTitle.includes(this.state.search))
           
           let salary50to100 = []
           let salary100to150= []
           let salaryLessThan50 = []
           let salaryGreatThen150 = []
           for (let job of searchedJobs){
-            let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-            let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+            let min = job.min
+            let max = job.max
             if (min > 50000 && max <= 100000){
               salary50to100.push(job)
             }
@@ -1003,8 +681,9 @@ class Home extends Component {
           if (this.state.salarySelected === '100K-150K'){
             jobs = salary100to150
             let map = {}
+            if (jobs.length > 0){
             for (let job of jobs){
-              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              let city = job.city.split(',')[0]
               if (map[city] === undefined){
                   map[city] = 1
               }
@@ -1018,14 +697,27 @@ class Home extends Component {
                 topCities.push([key, map[key]])
               }
             }
+            if (topCities.length === 0){
+              console.log('nothing')
+              this.setState({ topCities: [['No Citys Found', 0]] })
+              const postData = <EmptyState />
+              this.setState({
+                NothingFound: true,
+                pageCount: 0,      
+                postData
+               })
+              this.setState({ loading: false })
+              this.setState({ filteredSearchJobs: searchedJobs.length })
+              return
+            }
           this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
-            
+           }
           }
           if (this.state.salarySelected === '50-100K'){
             jobs = salary50to100
             let map = {}
             for (let job of jobs){
-              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              let city = job.city.split(',')[0]
               if (map[city] === undefined){
                   map[city] = 1
               }
@@ -1038,6 +730,19 @@ class Home extends Component {
               if (sortedKeys.includes(map[key])){
                 topCities.push([key, map[key]])
               }
+            }
+            if (topCities.length === 0){
+              console.log('nothing')
+              this.setState({ topCities: [['No Citys Found', 0]] })
+              const postData = <EmptyState />
+              this.setState({
+                NothingFound: true,
+                pageCount: 0,      
+                postData
+               })
+              this.setState({ loading: false })
+              this.setState({ filteredSearchJobs: searchedJobs.length })
+              return
             }
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
           }
@@ -1045,7 +750,7 @@ class Home extends Component {
             jobs = salaryLessThan50
             let map = {}
             for (let job of jobs){
-              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              let city = job.city.split(',')[0]
               if (map[city] === undefined){
                   map[city] = 1
               }
@@ -1058,6 +763,19 @@ class Home extends Component {
               if (sortedKeys.includes(map[key])){
                 topCities.push([key, map[key]])
               }
+            }
+            if (topCities.length === 0){
+              console.log('nothing')
+              this.setState({ topCities: [['No Citys Found', 0]] })
+              const postData = <EmptyState />
+              this.setState({
+                NothingFound: true,
+                pageCount: 0,      
+                postData
+               })
+              this.setState({ loading: false })
+              this.setState({ filteredSearchJobs: searchedJobs.length })
+              return
             }
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
           }
@@ -1065,12 +783,13 @@ class Home extends Component {
             jobs = salaryGreatThen150
             let map = {}
             for (let job of jobs){
-              let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+              let city = job.city.split(',')[0]
               if (map[city] === undefined){
                   map[city] = 1
               }
               map[city] += 1
             }
+            
             const sortedKeys = Object.keys(map).map(city => map[city]).sort((a,b) => b - a).slice(0, 5)
             let keys = Object.keys(map)
             let topCities = []
@@ -1079,10 +798,23 @@ class Home extends Component {
                 topCities.push([key, map[key]])
               }
             }
+            if (topCities.length === 0){
+              console.log('nothing')
+              this.setState({ topCities: [['No Citys Found', 0]] })
+              const postData = <EmptyState />
+              this.setState({
+                NothingFound: true,
+                pageCount: 0,      
+                postData
+               })
+              this.setState({ loading: false })
+              this.setState({ filteredSearchJobs: searchedJobs.length })
+              return
+            }
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
           }
           for (let job of jobs){
-            let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+            let city = job.city.split(',')[0]
             if (map[city] === undefined){
                 map[city] = 1
             }
@@ -1105,48 +837,7 @@ class Home extends Component {
 
           const postData = slice.map((job) => {
             return (
-              <article 
-              onClick={()=> this.setState({ 
-                show: true, 
-                jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-                contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-                whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-                majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-                keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-              })}
-                className="job-card" style={{
-                width: '100%',
-                marginBottom: '20px',
-              }}>
-                  <div className="company-logo-img">
-                    <img 
-                        src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                        style={{
-                        verticalAlign: 'middle',
-                        width: '116px',
-                        height: '116px',
-                        borderRadius: '50%',
-                        }} />  
-                  </div>
-                  <div className="job-title" style={{
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'pre'
-                  }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-                  <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-                  <div className="skills-container">
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                    <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                    <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-                  </div>
-                  <button style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              } >Apply</button>
-              </article>
+              <Job job = {job} />
             )
           })
       
@@ -1158,27 +849,11 @@ class Home extends Component {
            return
       }
     //if a search was made and no city or salary selected
-    this.setState({ filteredSearchJobs: container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length })
+    this.setState({ filteredSearchJobs: container.filter(job => job.JobTitle.includes(this.state.search)).length })
 
-    const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search))
+    const searchedJobs = container.filter(job => job.JobTitle.includes(this.state.search))
     if (searchedJobs === undefined || searchedJobs.length === 0){
-      const postData = <div style={{
-        marginLeft: '37px',
-        margin: '78px auto',
-        display: 'flex',
-        listStyle: 'none',
-        outline: 'none',
-        justifyContent: 'center'
-      }}> 
-       <div>
-        <div><FaRegSadCry size={150}/> </div>
-        <p style={{
-              marginLeft: '-21px',
-              marginTop: '10px'
-        }}> No jobs founds. Search again. </p>
-        <Button style={{ marginLeft: '21px' }}variant="primary" onClick={()=> window.location.reload()}>Reset Filters</Button>
-        </div>
-      </div>
+      const postData = <EmptyState />
       this.setState({
         NothingFound: true,
         pageCount: 0,      
@@ -1194,7 +869,7 @@ class Home extends Component {
     if (searchedJobs.length > 0){
     let map = {}
       for (let job of searchedJobs){
-        let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+        let city = job.city.split(',')[0]
         if (map[city] === undefined){
             map[city] = 1
         }
@@ -1215,8 +890,8 @@ class Home extends Component {
         let salaryGreatThen150 = []
         var jobs
         for (let job of searchedJobs){
-          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          let min = job.min
+          let max = job.max
           if (min > 50000 && max <= 100000){
             salary50to100.push(job)
           }
@@ -1238,53 +913,11 @@ class Home extends Component {
 
       const postData = slice.map((job) => {
       return (
-        <article 
-          onClick={()=> this.setState({ 
-            show: true, 
-            jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-            contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-            whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-            majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-            keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-          })}
-          className="job-card" style={{
-          width: '100%',
-          marginBottom: '20px',
-        }}>
-            <div className="company-logo-img">
-              <img 
-                  src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                  style={{
-                  verticalAlign: 'middle',
-                  width: '116px',
-                  height: '116px',
-                  borderRadius: '50%',
-                  }} />  
-            </div>
-            <div className="job-title" style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'pre'
-            }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-            <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-            <div className="skills-container">
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-            </div>
-            <button  style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-            <a href="#"></a>
-        </article>
+        <Job job = {job} />
       )
     })
     this.setState({
-      pageCount: Math.ceil(container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).length / this.state.perPage),      
+      pageCount: Math.ceil(container.filter(job => job.JobTitle.includes(this.state.search)).length / this.state.perPage),      
       postData
      })
      this.setState({ loading: false })
@@ -1297,7 +930,7 @@ class Home extends Component {
       //if a search was made and a city selected AND a salary selected
       if (this.state.salarySelected.length > 0){
         console.log('search & city & salary')
-        const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected))
+        const searchedJobs = container.filter(job => job.JobTitle.includes(this.state.search)).filter(job => job.city.split(',')[0].includes(this.state.citySelected))
      
         
         let salary50to100 = []
@@ -1306,8 +939,8 @@ class Home extends Component {
         let salaryGreatThen150 = []
 
         for (let job of searchedJobs){
-          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          let min = job.min
+          let max = job.max
           if (min > 50000 && max <= 100000){
             salary50to100.push(job)
           }
@@ -1321,6 +954,7 @@ class Home extends Component {
             salaryGreatThen150.push(job)
           }
         }
+
         var jobs 
           if (this.state.salarySelected === '100K-150K'){
             jobs = salary100to150
@@ -1335,25 +969,10 @@ class Home extends Component {
             jobs = salaryGreatThen150
           }
       const slice = jobs.slice(this.state.offset, this.state.offset + this.state.perPage)
+
       if (slice.length === 0){
         console.log('nothing to display')
-            const postData = <div style={{
-              marginLeft: '37px',
-              margin: '78px auto',
-              display: 'flex',
-              listStyle: 'none',
-              outline: 'none',
-              justifyContent: 'center'
-            }}> 
-             <div>
-              <div><FaRegSadCry size={150}/> </div>
-              <p style={{
-                    marginLeft: '-21px',
-                    marginTop: '10px'
-              }}> No jobs founds. Search again. </p>
-              <Button style={{ marginLeft: '21px' }}variant="primary" onClick={()=> window.location.reload()}>Reset Filters</Button>
-              </div>
-            </div>
+            const postData = <EmptyState />
             this.setState({
               filteredSearchJobs: 0, 
               NothingFound: true,
@@ -1370,48 +989,7 @@ class Home extends Component {
       const postData = slice.map((job) => {
        
       return (
-        <article 
-          onClick={()=> this.setState({ 
-          show: true, 
-          jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-          contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-          whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-          majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-          keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-        })}
-          className="job-card" style={{
-          width: '100%',
-          marginBottom: '20px',
-        }}>
-            <div className="company-logo-img">
-              <img 
-                  src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                  style={{
-                  verticalAlign: 'middle',
-                  width: '116px',
-                  height: '116px',
-                  borderRadius: '50%',
-                  }} />  
-            </div>
-            <div className="job-title" style={{
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'pre'
-            }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-            <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName}</div>
-            <div className="skills-container">
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-            </div>
-            <button style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-        </article>
+        <Job job = {job} />
       )
     })
     this.setState({
@@ -1422,14 +1000,16 @@ class Home extends Component {
      return
     }
       //if a search was made and city seleted (no salary selected)
-      const justCityNameNoState = container.filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.split(',')[0] === (this.state.citySelected))
-      const slice = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).slice(this.state.offset, this.state.offset + this.state.perPage)
-      const searchedJobs = container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job))
+      const justCityNameNoState = container.filter(job => job.city.split(',')[0] === (this.state.citySelected))
+      const slice = container.filter(job => job.JobTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).slice(this.state.offset, this.state.offset + this.state.perPage)
+      const searchedJobs = container.filter(job => job.JobTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job))
+
       console.log('searchedJobs', searchedJobs.length)
+
       this.setState({ filteredSearchJobs: searchedJobs.length })
       let map = {}
         for (let job of searchedJobs){
-          let city = job.MatchedObjectDescriptor.PositionLocation[0].CityName
+          let city = job.city.split(',')[0]
           if (map[city] === undefined){
               map[city] = 1
           }
@@ -1452,8 +1032,8 @@ class Home extends Component {
 
         //
         for (let job of searchedJobs){
-          let min = job.MatchedObjectDescriptor.PositionRemuneration[0].MinimumRange * 1
-          let max = job.MatchedObjectDescriptor.PositionRemuneration[0].MaximumRange * 1
+          let min = job.min
+          let max = job.max
           if (min > 50000 && max <= 100000){
             salary50to100.push(job)
           }
@@ -1469,73 +1049,36 @@ class Home extends Component {
         }
         this.setState({ salaryRanges: [['50-100K', [salary50to100.length]], ['100K-150K', [salary100to150.length]], ['<50K', [salaryLessThan50.length]], ['150K+', [salaryGreatThen150.length]]] })
         
-    
-        
         const postData = slice.map((job) => {
          
         return (
-          <article 
-            onClick={()=> this.setState({ 
-              show: true, 
-              jobSummary: job.MatchedObjectDescriptor.UserArea.Details.JobSummary, 
-              contactEmail: job.MatchedObjectDescriptor.UserArea.Details.AgencyContactEmail,
-              whatToExpect: job.MatchedObjectDescriptor.UserArea.Details.WhatToExpectNext,
-              majorDuties: job.MatchedObjectDescriptor.UserArea.Details.MajorDuties[0],
-              keyRequirements:job.MatchedObjectDescriptor.UserArea.Details.KeyRequirements
-            })}
-            className="job-card" style={{
-            width: '100%',
-            marginBottom: '20px',
-          }}>
-              <div className="company-logo-img">
-                <img 
-                    src={this.displayImage(job.MatchedObjectDescriptor.DepartmentName)} 
-                    style={{
-                    verticalAlign: 'middle',
-                    width: '116px',
-                    height: '116px',
-                    borderRadius: '50%',
-                    }} />  
-              </div>
-              <div className="job-title" style={{
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'pre'
-              }}>{job.MatchedObjectDescriptor.PositionTitle} {this.isJobExpiringSoon(job.MatchedObjectDescriptor.PositionEndDate, job.MatchedObjectDescriptor.PositionStartDate)}</div>
-              <div className="company-name">{job.MatchedObjectDescriptor.OrganizationName ? job.MatchedObjectDescriptor.OrganizationName : 'loading'}</div>
-              <div className="skills-container">
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                <div className="skill">{job.MatchedObjectDescriptor.UserArea.Details.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                <div className="skill">High Grade: {!isNaN(job.MatchedObjectDescriptor.UserArea.Details.HighGrade) ?  job.MatchedObjectDescriptor.UserArea.Details.HighGrade * 1 : 'N/A'}</div>
-              </div>
-              <button style={{
-                      borderRadius: '25px'
-                }} className="apply" onClick={() => {
-                this.setState({ applyClicked: true })
-                location.href = job.MatchedObjectDescriptor.PositionURI
-              }
-              }>Apply</button>
-          </article>
+            <Job job = {job} />
         )
       })
       this.setState({
-        pageCount: Math.ceil(container.filter(job => job.MatchedObjectDescriptor.PositionTitle.includes(this.state.search)).filter(job => job.MatchedObjectDescriptor.PositionLocation[0].CityName.includes(this.state.citySelected)).length / this.state.perPage),      
+        pageCount: Math.ceil(container.filter(job => job.JobTitle.includes(this.state.search)).filter(job => job.city.split(',')[0].includes(this.state.citySelected)).length / this.state.perPage),      
         postData
        })
        this.setState({ loading: false })
      }
   }
 
-  componentDidMount(){
+  async componentDidMount(){
     try {      
       this.getData()
       this.props.forcePage()
+      this.props.getAllJobs(this.props.auth.id)
     }
     catch(err){
       console.log(err)
     }
   }
 
+  componentDidUpdate(prevProps){
+    if (prevProps.jobs.length !== this.props.jobs.length){
+      this.props.getAllJobs(this.props.auth.id)
+    }
+  }
 
   render() {
     const current = new Date();
@@ -1543,9 +1086,7 @@ class Home extends Component {
     const {  onChange, showCityJobs, selectSalaryRnge, isJobExpiringSoon } = this;
     const { topCities, filteredSearchJobs, selections, salaryRanges, salarySelected } = this.state
     const { auth } = this.props
-    const { id } = auth
-    savedTheJob = this.state.clicked
-    console.log('saved job', savedTheJob)
+
     return (
       <div style={{
         overflowX: 'clip'
@@ -1553,75 +1094,6 @@ class Home extends Component {
         <Header style={{
         marginBottom: '45px'
         }}/>
-        {/* the offcanvas */}
-          <Offcanvas style={{ height: '40vh' }} placement='bottom' show={this.state.show && !this.state.applyClicked}>
-            <Offcanvas.Header closeButton onClick={()=> this.setState({ show: false })}>
-              <Offcanvas.Title> <h2>  Job Information </h2></Offcanvas.Title>
-            </Offcanvas.Header>
-            <Offcanvas.Body style={{
-              marginTop: '-13px'
-            }}>
-              
-              <div>
-                <div>
-                   <h5> <strong>  Job Description:</strong></h5>
-                   <p style={{
-                    fontSize: '19px'
-                   }}>  {this.state.jobSummary.length > 0 ? this.state.jobSummary : 'No summary found.'} </p>
-               </div>
-              </div>
-              <div>
-                <div>
-                    <h5> <strong> Contact Email:</strong> </h5> 
-                    <p style={{
-                    fontSize: '19px',
-                    marginTop: '-3px'
-                   }}>
-                    {this.state.contactEmail ? this.state.contactEmail : 'No email found.'} 
-                  </p>
-                </div>
-              </div>
-              <div>
-                <div>
-                    <h5> <strong> What to expect next: </strong> </h5> 
-                    <p style={{ 
-                    fontSize: '19px',
-                   }}>{this.state.whatToExpect} </p>
-                </div>
-              </div>
-              <div>
-                <div>
-                    <h5> <strong> Major Duties: </strong> </h5> 
-                    <p style={{
-                    fontSize: '19px'
-                   }}> {this.state.majorDuties}</p>
-                </div>
-              </div>
-              <div>
-                <div>
-                    <h5> <strong> Key Requirements: </strong> </h5> 
-                    <ul> 
-                    {this.state.keyRequirements.length > 0 ? this.state.keyRequirements.map(req => {
-                      return (
-                        <li style={{
-                          fontSize: '19px'
-                        }}>
-                          {req}
-                        </li>
-                      )
-                    })
-                    :
-                    <li style={{
-                      fontSize: '19px'
-                    }}> No requirement found. </li>
-                  }
-                    </ul>
-                </div>
-              </div>
-
-            </Offcanvas.Body>
-          </Offcanvas>
-        {/* the offcanvas */}
         <div>
           <div className="container">
               <div className="container">
@@ -1702,7 +1174,7 @@ class Home extends Component {
                                       }}>
                                        {topCities.length > 0 ? 
                                        topCities.map(city => {
-                                       const thecity = city[0].substring(0, city[0].indexOf(",")) 
+                                       const thecity = city[0] 
                                         return (
                                         <li 
                                           className={this.state.citySelected === thecity ? 'selected' : ''}
@@ -1889,20 +1361,6 @@ class Home extends Component {
                         flexWrap: 'wrap',
                         marginLeft: '-1%'
                       }}>
-                          {/* <ul style={{
-                              display: 'flex',
-                              justifyContent: 'flex-start',
-                              background: '#fff',
-                              boxSizing: 'border-box',
-                              margin: '0',
-                              width: '720px',
-                              position: 'relative',
-                              zIndex: '1',
-                              marginBottom: '1rem',
-                              marginLeft: 'auto',
-                              marginRight: 'auto',
-                              flexWrap: 'wrap',    
-                          }}> */}
                             <div style={{
                               listStyle: 'none',
                               marginLeft: '2%'
@@ -1912,7 +1370,6 @@ class Home extends Component {
                                   flexWrap: 'wrap'
                                 }}>
                                   <div 
-                                  // onClick={() => selectSalaryRnge(selection)}
                                   style={{
                                     padding: '0',
                                     display: 'flex',
@@ -1948,12 +1405,12 @@ class Home extends Component {
                                   </div>
                                 </div>
                             </div>
-                          {/* </ul> */}
                       </div>
                       :
                       null
                     }
                       {this.state.citySelected.length > 0 ? 
+                    
                           <div style={{
                          display: 'flex',
                          justifyContent: 'flex-start',
@@ -1969,20 +1426,6 @@ class Home extends Component {
                          flexWrap: 'wrap',
                          marginLeft: '-1%'
                        }}>
-                           {/* <ul style={{
-                               display: 'flex',
-                               justifyContent: 'flex-start',
-                               background: '#fff',
-                               boxSizing: 'border-box',
-                               margin: '0',
-                               width: '720px',
-                               position: 'relative',
-                               zIndex: '1',
-                               marginBottom: '1rem',
-                               marginLeft: 'auto',
-                               marginRight: 'auto',
-                               flexWrap: 'wrap',    
-                           }}> */}
                              <div style={{
                                listStyle: 'none',
                                marginLeft: '-21%'
@@ -1993,7 +1436,6 @@ class Home extends Component {
                                    marginLeft: '42px'
                                  }}>
                                    <div
-                                  //  onClick={() => showCityJobs(selection)}
                                    style={{
                                      padding: '0',
                                      display: 'flex',
@@ -2121,6 +1563,9 @@ const mapDispatch = (dispatch) => {
     },
     saveJob: (job) => {
       dispatch(saveJobs(job))
+    },
+    getAllJobs: (id) => {
+      dispatch(getJobs(id))
     }
   }
 }

@@ -39,6 +39,24 @@ class Navbar extends Component {
               <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span className="navbar-toggler-icon"></span>
               </button>
+              <div className="collapse navbar-collapse ms-auto" style={{
+                marginRight: '94px'
+              }} id="navbarNav" >
+                  <div class="dropdown ms-auto" style={{
+                    marginLeft: '10px'
+                  }}>
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                       <BsGearFill />
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                      { !isLoggedIn ? <a class="dropdown-item" href='/login'>Login</a> :  null} 
+
+                      { isLoggedIn ? <a  onClick={handleLogout}  class="dropdown-item" href="#">Logout</a> : null}
+                      { isLoggedIn ? <a class="dropdown-item" href='/savedjobs' >Your Jobs</a> : null}
+
+                    </div>
+                  </div>
+              </div>
             </nav>
         </div>
     )

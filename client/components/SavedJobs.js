@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import Navbar from './Navbar'
 import { connect } from 'react-redux'
-import { getJobs, deleteJob } from '../store'
+import { getJobs, deleteJob, fetchUserJobs, fetchSavedJobs } from '../store'
 import {
     TiDelete
 } from 'react-icons/ti'
@@ -69,20 +69,16 @@ class SavedJobs extends Component {
     }
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png'
   }
-    
   componentDidMount(){
-   this.props.getJobs()
+    this.props.getAllJobs(this.props.auth.id)
   }
-  componentDidUpdate(prevProps){
-    if (prevProps.jobs !== this.props.jobs){
-        this.setState({ jobs: this.props.jobs})
-    }
-  }
+
   render() {
     const { deleteJob } = this
     const { jobs } = this.state
     const id = this.props.auth.id
-    console.log('jobs', this.props.jobs)
+    const thejobs = this.props.jobs.map(job => job.jobId)
+    console.log(thejobs)
     return (
       <div>
         <div>
@@ -96,7 +92,7 @@ class SavedJobs extends Component {
             paddingBottom: '60px',
             paddingTop: '1px',
             borderBottom: '1px solid #dde0f4',
-            height: '530px',
+            height: '436px',
             backgroundImage: "url(" + "https://weworkremotely.com/assets/we-work-remotely@3x-c754140b276c02588dd4a43b70212d3668a75a54970c4baac325aeb60cb92f66.svg" + ")",
         }}>
               <div>
@@ -231,7 +227,8 @@ class SavedJobs extends Component {
                                     background: 'none',
                                     marginTop: '-6px'
                                 }}> 
-                                    <TiDelete size={33}/> </button>
+                                    <TiDelete size={33}/> 
+                                  </button>
                                 <a href="#"></a>
                             </article>
                           ) 
@@ -251,12 +248,12 @@ const mapState = (state) => {
 }
 const mapDispatch = (dispatch) => {
     return {
-        getJobs: (id) => {
-            dispatch(getJobs(id))
-        },
-        deleteJob: (id) => {
-            dispatch(deleteJob(id))
-        }
+      getAllJobs: (id) => {
+        dispatch(getJobs(id))
+      },
+      getUserJobs: (thejobs) => {
+        dispatch(fetchSavedJobs(thejobs))
+      }
     }
 }
 
