@@ -3,7 +3,7 @@ const express = require('express')
 const morgan = require('morgan')
 const Job = require('./db/models/Job')
 const app = express()
-
+const APIjob = require('./db/models/APIjob')
 module.exports = app
 
 // logging middleware
@@ -35,6 +35,28 @@ app.use((req, res, next) => {
   }
 })
 
+app.post('/apijob', async (req, res) => {
+  try {
+    const job = await APIjob.create(req.body)
+    res.send(job)
+  }
+  catch(err){
+    console.log(err)
+  }
+})
+
+
+app.get('/apijobs', async (req, res) => {
+  try {
+    const jobs = await APIjob.findAll()
+    res.send(jobs)
+  }
+  catch(err){
+    console.log(err)
+  }
+})
+
+
 app.post('/savejob', async (req, res) => {
   try {
     const job = await Job.create(req.body)
@@ -57,9 +79,16 @@ app.delete('/jobs/:id', async (req, res)=> {
   }
 })
 
-app.get('/jobs/', async(req, res) => {
+app.get('/jobs/:id', async(req, res) => {
   try {
-    const jobs = await Job.findAll()
+    let id = req.params.id * 1
+    console.log(id)
+    const jobs = await Job.findAll({
+      where: {
+        userId: id
+      }
+    })
+    console.log(jobs)
     res.send(jobs)
   }
   catch(err){

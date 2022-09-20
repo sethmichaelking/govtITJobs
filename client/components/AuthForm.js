@@ -35,7 +35,7 @@ class AuthForm extends Component {
       background: 'rgb(238,174,202)',
       background: 'radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%)'         
     }}> 
-        {
+        {/* {
                  this.state.show ?
                     <div>
                         <Alert key='success' variant='success'>
@@ -52,7 +52,7 @@ class AuthForm extends Component {
                         </Alert>
                     </div> 
                 : null
-         }
+         } */}
       <div class='row'>
         <div class="col-md-3 offset-md-3" style={{
             marginTop: '25%',
