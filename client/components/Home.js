@@ -65,30 +65,10 @@ class Home extends Component {
       async getJobs(){
             if (this.jobs === undefined){
               let container = []
-              // var host = 'data.usajobs.gov'; 
-              // var userAgent = 'sethkingriter@gmail.com'
-              // var authKey = 'InzNEWOLXdrBHP/62f3tqX6pOhSGmFDaTdHOB9zEmbg=' 
               this.setState({ loading: true })
               const response = await axios.get('/apijobs')
               const data = response.data
               container.push(...data)
-          //     for (let i = 1; i <= 2; i++){
-          //       const response = await fetch(`https://data.usajobs.gov/api/search?Keyword=Software&ResultsPerPage=500&Page=${i}`, {
-          //         method: 'GET',      
-          //         headers: {          
-          //             "Host": host,          
-          //             "User-Agent": userAgent,          
-          //             "Authorization-Key": authKey      
-          //           }  
-          //         }
-          //       )
-          //       .then(response => response.json())
-          //       .then(data => {
-          //         const gigs = data.SearchResult.SearchResultItems
-          //         console.log('jobs', ...gigs)
-          //         container.push(...gigs)
-          //       });
-          // }
           this.jobs = container
           this.setState({ loading: false })
         }
@@ -1074,11 +1054,6 @@ class Home extends Component {
     }
   }
 
-  componentDidUpdate(prevProps){
-    if (prevProps.jobs.length !== this.props.jobs.length){
-      this.props.getAllJobs(this.props.auth.id)
-    }
-  }
 
   render() {
     const current = new Date();
