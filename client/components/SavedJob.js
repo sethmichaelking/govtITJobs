@@ -98,6 +98,7 @@ export function displayImage(name){
   }
   
 function SavedJob({ job }) {
+    console.log('in func')
     const [show, setShow] = useState(false)
     const [clicked, setClicked] = useState(true)
     const user = useSelector(state => state.auth)
