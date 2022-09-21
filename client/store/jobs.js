@@ -6,7 +6,7 @@ const jobs = (state = [], action) => {
         return  [...action.jobs]
     }
     if (action.type === 'REMOVE_JOB'){
-       return state.filter((job) => job.id !== action.id)
+       return state.filter((job) => job.jobId !== action.id)
     }
     return state
 }
@@ -21,9 +21,6 @@ export const fetchUserJobs = (id) => async dispatch => {
   const data = response.data
 }
 
-export const fetchSavedJobs = (arr) => {
-  console.log('in store', arr)
-}
 export const deleteJob = (id) => async dispatch => {
   const response = await axios.delete(`/jobs/${id}`)
     dispatch({ type: 'REMOVE_JOB', id })

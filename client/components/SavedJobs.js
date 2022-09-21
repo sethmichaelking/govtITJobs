@@ -1,19 +1,36 @@
 import React, { Component } from 'react'
 import Navbar from './Navbar'
 import { connect } from 'react-redux'
-import { getJobs, deleteJob, fetchUserJobs, fetchSavedJobs } from '../store'
-import {
-    TiDelete
-} from 'react-icons/ti'
+import axios from 'axios'
+import SavedJob from './SavedJob'
+import { getJobs, deleteJob, fetchUserJobs, fetchJobs } from '../store'
+
 class SavedJobs extends Component {
   constructor(){
     super()
     this.state = {
-        jobs: '',
-        usersSavedJobs: ''
+        jobs: [],
+        usersSavedJobs: '',
+        savedJobs: []
     },
     this.displayImage = this.displayImage.bind(this)
     this.handleDelete = this.handleDelete.bind(this)
+    this.handleJobs = this.handleJobs.bind(this)
+
+  }
+  handleJobs(jobs, thejobs){
+    let container = []
+    for (let i = 0; i < jobs.length; i++){
+      let job = jobs[i]
+      if (thejobs.includes(job.id)){
+        container.push(job)
+      }
+    }
+    return container.map((job) => {
+      return (
+        <SavedJob job={job} />
+      )
+    })
   }
   handleDelete(id){
     this.props.deleteJob(id)
@@ -69,16 +86,23 @@ class SavedJobs extends Component {
     }
     return 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/No-Image-Placeholder.svg/1665px-No-Image-Placeholder.svg.png'
   }
-  componentDidMount(){
-    this.props.getAllJobs(this.props.auth.id)
+
+  async componentDidMount(){
+    this.props.getAllJobs(this.props.auth.id) 
+    const response = await axios.get('/apijobs')
+    let container = []
+    const data = response.data
+    container.push(...data)
+    this.setState({ jobs: container })
   }
+ 
 
   render() {
     const { deleteJob } = this
-    const { jobs } = this.state
     const id = this.props.auth.id
     const thejobs = this.props.jobs.map(job => job.jobId)
-    console.log(thejobs)
+    const { jobs, savedJobs } = this.state
+    
     return (
       <div>
         <div>
@@ -184,55 +208,11 @@ class SavedJobs extends Component {
                           color: '#264384',
                           fontSize: '20px'
                       }}> 
-                        {jobs ? jobs.filter(job => job.userId === id).length : null } saved jobs
+                        {jobs.length === 0 ? '0' : thejobs.length} saved jobs
                 </div>
-                {jobs ? jobs.filter(job => job.userId === id).length > 0 ? jobs.filter(job => job.userId === id).map(job => {
-                    return (
-                            <article 
-                              key={job.id}
-                              className="job-card" style={{
-                              width: '100%',
-                              marginBottom: '20px',
-                            }}>
-                                <div className="company-logo-img">
-                                  <img 
-                                      src={this.displayImage(job.DepartmentName)} 
-                                      style={{
-                                      verticalAlign: 'middle',
-                                      width: '116px',
-                                      height: '116px',
-                                      borderRadius: '50%',
-                                      }} />  
-                                </div>
-                                <div className="job-title" style={{
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'pre'
-                                }}>{job.JobTitle}</div>
-                                <div className="company-name">{job.OrganizationName ? job.OrganizationName : 'loading'}</div>
-                                <div className="skills-container">
-                                  <div className="skill">{job.DrugTestRequired === 'False' ? 'Drug Test: No' : 'Drug Test: Yes'}</div>
-                                  <div className="skill">{job.TeleworkEligible === true ? 'Remote' : 'On-site'}</div>
-                                  <div className="skill">High Grade: {!isNaN(job.HighGrade) ?  job.HighGrade * 1 : 'N/A'}</div>
-                                </div>
-                                <button className="apply" onClick={() => {
-                                  location.href = job.MatchedObjectDescriptor.PositionURI
-                                }
-                                }>Apply</button>
-                                <button className='save' 
-                                onClick={() => this.handleDelete(job.id)}
-                                style={{
-                                    padding: '0',
-                                    border: 'none',
-                                    background: 'none',
-                                    marginTop: '-6px'
-                                }}> 
-                                    <TiDelete size={33}/> 
-                                  </button>
-                                <a href="#"></a>
-                            </article>
-                          ) 
-                }) : 'Nothing found' : null}
+                <div>
+                      {this.handleJobs(jobs, thejobs)}
+                </div>
             </div>
         </div>
       </div>
@@ -250,9 +230,6 @@ const mapDispatch = (dispatch) => {
     return {
       getAllJobs: (id) => {
         dispatch(getJobs(id))
-      },
-      getUserJobs: (thejobs) => {
-        dispatch(fetchSavedJobs(thejobs))
       }
     }
 }

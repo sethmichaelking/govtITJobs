@@ -32,10 +32,6 @@ const APIjob = db.define('apijob', {
     type: Sequelize.TEXT(2500),
     
   },
-  saved: {
-    type: Sequelize.BOOLEAN,
-    defaultValue: false
-  },
   min: {
     type: Sequelize.INTEGER
   },

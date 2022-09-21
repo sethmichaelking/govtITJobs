@@ -69,15 +69,22 @@ app.post('/savejob', async (req, res) => {
 
 app.delete('/jobs/:id', async (req, res)=> {
   try{
-    console.log('id', req.params.id)
-    const job = await Job.findByPk(req.params.id)
-    await job.destroy()
-    res.sendStatus(204)
+    let id = req.params.id
+    const job = await Job.findOne({
+      where:{
+        jobId: id
+      }
+    })
+    console.log(job)
+   job.destroy()
+   res.sendStatus(204)
   }
   catch(err){
     console.log(err)
   }
 })
+
+
 
 app.get('/jobs/:id', async(req, res) => {
   try {

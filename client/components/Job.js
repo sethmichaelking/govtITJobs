@@ -219,7 +219,6 @@ function Job({ job }) {
                 setClicked(false),
                 handleSave({ jobId: job.id, userId: user.id  }),
                 setSaved(true)
-                arr.push(job.id)
               }}>
                 {jobIds.includes(job.id) ? 'Saved' : 'Save Job'}
               </button> }
