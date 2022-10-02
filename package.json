@@ -17,6 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.19.3",
+    "@babel/preset-env": "^7.19.3",
     "@babel/preset-react": "^7.18.6",
     "awesome-toast-component": "^2.0.3",
     "bcrypt": "^5.0.1",

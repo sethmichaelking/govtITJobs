@@ -911,7 +911,20 @@ class Home extends Component {
       if (this.state.salarySelected.length > 0){
         console.log('search & city & salary')
         const searchedJobs = container.filter(job => job.JobTitle.includes(this.state.search)).filter(job => job.city.split(',')[0].includes(this.state.citySelected))
-     
+        if (searchedJobs.length === 0){
+          console.log('nothing to display')
+          const postData = <EmptyState />
+          this.setState({
+            filteredSearchJobs: 0, 
+            NothingFound: true,
+            pageCount: 0,      
+            postData
+           })
+           this.setState({ salaryRanges: [['50-100K', 0], ['100K-150K', 0], ['<50K', 0], ['150K+', 0]] })
+           this.setState({ loading: false })
+           this.setState({ topCities: [[this.state.citySelected, 0]] })
+           return
+        }
         
         let salary50to100 = []
         let salary100to150= []
@@ -984,8 +997,21 @@ class Home extends Component {
       const slice = container.filter(job => job.JobTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job)).slice(this.state.offset, this.state.offset + this.state.perPage)
       const searchedJobs = container.filter(job => job.JobTitle.includes(this.state.search)).filter(job => justCityNameNoState.includes(job))
 
-      console.log('searchedJobs', searchedJobs.length)
-
+    console.log('searchedJobs', searchedJobs)
+      if (searchedJobs.length === 0){
+        console.log('nothing to display')
+        const postData = <EmptyState />
+        this.setState({
+          filteredSearchJobs: 0, 
+          NothingFound: true,
+          pageCount: 0,      
+          postData
+         })
+         this.setState({ salaryRanges: [['50-100K', 0], ['100K-150K', 0], ['<50K', 0], ['150K+', 0]] })
+         this.setState({ loading: false })
+         this.setState({ topCities: [[this.state.citySelected, 0]] })
+         return
+      }
       this.setState({ filteredSearchJobs: searchedJobs.length })
       let map = {}
         for (let job of searchedJobs){

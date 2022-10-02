@@ -4,7 +4,10 @@ import { connect } from 'react-redux'
 import axios from 'axios'
 import SavedJob from './SavedJob'
 import { getJobs, deleteJob, fetchUserJobs, fetchJobs } from '../store'
-
+import {
+  TbArrowBackUp
+} from 'react-icons/tb'
+import Button from 'react-bootstrap/esm/Button'
 class SavedJobs extends Component {
   constructor(){
     super()
@@ -208,6 +211,7 @@ class SavedJobs extends Component {
                           color: '#264384',
                           fontSize: '20px'
                       }}> 
+                        <p> <Button variant='primary' href='/home'> <TbArrowBackUp />  Back </Button> </p>
                         {jobs.length === 0 ? '0' : thejobs.length} saved jobs
                 </div>
                 <div>
