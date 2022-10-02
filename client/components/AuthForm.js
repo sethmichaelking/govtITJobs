@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import {connect} from 'react-redux'
 import {authenticate} from '../store'
 import Button from 'react-bootstrap/Button';
+import { Link } from 'react-router-dom'
 import Alert from 'react-bootstrap/Alert'
 /**
  * COMPONENT
@@ -17,13 +18,20 @@ class AuthForm extends Component {
     }
   }
   render() {
+    
     const {name, displayName, handleSubmit, error, auth} = this.props
-    const keys = Object.keys(auth)
-    console.log('keys', keys)
+    let keys = []
+   { name === 'login' ? keys = Object.keys(auth) : null}
+    { if (name === 'login'){
     if (keys.length > 3){
         this.setState({ show: true })
     }
-
+   } 
+  }
+  if (error !== undefined){
+    console.log(error.response.data)
+    console.log(keys)
+  }
     return (
     <div style={{
       height: '100vh',
@@ -35,8 +43,8 @@ class AuthForm extends Component {
       background: 'rgb(238,174,202)',
       background: 'radial-gradient(circle, rgba(238,174,202,1) 0%, rgba(148,187,233,1) 100%)'         
     }}> 
-        {/* {
-                 this.state.show ?
+        {
+                 this.state.show && name === 'login' ?
                     <div>
                         <Alert key='success' variant='success'>
                          <h4 style={{textAlign: 'center'}}className="alert-heading"> Login Successful!</h4>
@@ -45,14 +53,23 @@ class AuthForm extends Component {
                 : null
          }
          {
-                 keys.length === 1 ?
+                 keys.length === 1  && name === 'login'?
                     <div>
                         <Alert key='danger' variant='danger'>
                          <h4 style={{textAlign: 'center'}}className="alert-heading"> {error.response.data} </h4>
                         </Alert>
                     </div> 
                 : null
-         } */}
+         }
+        {
+                  name === 'signup' && error !== undefined ?
+                    <div>
+                        <Alert key='danger' variant='danger'>
+                         <h4 style={{textAlign: 'center'}} className="alert-heading"> {error.response.data} </h4>
+                        </Alert>
+                    </div> 
+                : null
+         }
       <div class='row'>
         <div class="col-md-3 offset-md-3" style={{
             marginTop: '25%',
@@ -83,7 +100,7 @@ class AuthForm extends Component {
                   display: 'flex',
                   justifyContent: 'center',
                   fontWeight: '600'
-                }}> <h2> Sign in to continue</h2></div>
+                }}> <h2> {name === 'signup' ? 'Start your technology career' : 'Sign in to continue'}</h2></div>
               <div class="form-text text-center text-dark">
                 <label htmlFor="username" style={{
                   marginLeft: '-85px',
@@ -106,6 +123,9 @@ class AuthForm extends Component {
                 <input name="password" type="password" style={{
                     borderRadius: '10px'
                   }}/>
+              </div>
+              <div>
+                <p> {name === 'signup' ? 'Already a member?' : 'Not a member yet?'} <Link to= {name === 'signup' ? '/login' : '/signup'}> {name === 'signup' ? 'Login' : 'Sign up'} </Link></p> 
               </div>
               <div id="emailHelp" class="form-text text-center text-dark">
                 <Button variant="primary" type="submit">{displayName}</Button>

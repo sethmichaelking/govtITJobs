@@ -2,6 +2,7 @@ import {connect} from 'react-redux'
 import React, { Component } from 'react'
 import Header from './Header'
 import moment from 'moment'
+import Button from 'react-bootstrap/Button'
 import ReactPaginate from 'react-paginate'
 import { RotatingLines } from 'react-loader-spinner'
 import { setForcePage, updateForcedPage, getJobs } from '../store'
@@ -307,7 +308,7 @@ class Home extends Component {
             postData
            })
           this.setState({ loading: false })
-          this.setState({ filteredSearchJobs: searchedJobs.length })
+          this.setState({ filteredSearchJobs: 0 })
           return
         }
         const slice = searchedJobsWithSalary.slice(this.state.offset, this.state.offset + this.state.perPage)
@@ -634,7 +635,6 @@ class Home extends Component {
       if (this.state.salarySelected.length > 0){
         console.log('search and salary')
         const searchedJobs = container.filter(job => job.JobTitle.includes(this.state.search))
-          
           let salary50to100 = []
           let salary100to150= []
           let salaryLessThan50 = []
@@ -721,7 +721,7 @@ class Home extends Component {
                 postData
                })
               this.setState({ loading: false })
-              this.setState({ filteredSearchJobs: searchedJobs.length })
+              this.setState({ filteredSearchJobs: 0 })
               return
             }
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
@@ -788,7 +788,7 @@ class Home extends Component {
                 postData
                })
               this.setState({ loading: false })
-              this.setState({ filteredSearchJobs: searchedJobs.length })
+              this.setState({ filteredSearchJobs: 0 })
               return
             }
             this.setState({ topCities: topCities.sort((a,b) => b[1] - a[1]).slice(0, 6) })
@@ -1077,7 +1077,7 @@ class Home extends Component {
                   }}>
                     {/* //the filters */}
                     <div className='row' style={{
-                      height: '40vh',
+                      height: '35vh',
                       flexDirection: 'column',
                       width: '400px',
                       marginRight: '20px',
@@ -1085,7 +1085,7 @@ class Home extends Component {
                         <div style={{
                           alignContent: 'flex-start',
                           display: 'flex',
-                          height: '40vh',
+                          height: '35vh',
                           flexDirection: 'column',
                           background: '#f8f9fa',
                           padding: '1.5rem 1rem',
@@ -1458,7 +1458,7 @@ class Home extends Component {
                           color: '#264384',
                           fontSize: '20px'
                       }}> 
-                        {this.state.filteredSearchJobs} open jobs・Updated  {date}
+                        {this.state.filteredSearchJobs} open jobs・Updated  {date} {this.state.filteredSearchJobs > 0 ? <Button style={{ marginLeft: '0px' }}variant="primary" onClick={()=> window.location.reload()}> Reset Filters</Button> : null}
                       </div>
                       {this.state.loading ? 
                       <div>
@@ -1486,13 +1486,12 @@ class Home extends Component {
                           display: 'flex',
                           justifyContent: 'center',
                           fontWeight: '600'
-                        }}> Pulling data from the USA API. <br />This could take up to 15 seconds. </p>
+                        }}> Loading.... </p>
                       </div>
                     : this.state.postData}
                     {
-                      this.state.loading ? '' :
+                      this.state.loading ? '' : this.state.filteredSearchJobs > 0 ?
                       <ReactPaginate
-                          
                             previousLabel={"prev"}
                             nextLabel={"next"}
                             breakLabel={"..."}
@@ -1506,6 +1505,7 @@ class Home extends Component {
                             containerClassName={"pagination"}
                             subContainerClassName={"pages pagination"}
                             activeClassName={"active"}/>
+                            : null
                     }
                     </div>
                   </div>
