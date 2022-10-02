@@ -23,7 +23,7 @@ class Navbar extends Component {
   }
   handleLogout(){
       logout()
-      window.location.assign('http://localhost:8080/');
+      window.location.assign('http://localhost:8080/login');
   }
   render() {
     const { isLoggedIn, handleClick, auth } = this.props
